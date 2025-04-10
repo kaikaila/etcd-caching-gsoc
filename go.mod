@@ -1,4 +1,4 @@
-module github.com/YunkaiGSOC/etcd-caching
+module github.com/kaikaila/etcd-caching-gsoc
 
 go 1.24.1
 
