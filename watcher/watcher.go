@@ -10,7 +10,7 @@ import (
 
 // Go 中函数以小写字母开头表示 “包内可见”，类似 Java 的 package-private 函数
 // 等价于：void watchKey(Client cli, String key)
-func WatchKey(cli *clientv3.Client, key string) {
+func WatchKey(cli *clientv3.Client, key string, callback func(string, string)) {
 	// 相当于：Context ctx = new Context(); 用于控制取消、超时等
 	ctx := context.Background()
 
@@ -24,8 +24,7 @@ func WatchKey(cli *clientv3.Client, key string) {
 	for wresp := range rch {
 		// 每个响应里可能有多个事件，比如 PUT、DELETE 等
 		for _, ev := range wresp.Events {
-			// 类似 Java：System.out.printf("Type: %s Key: %s Value: %s\n", ev.getType(), ev.getKey(), ev.getValue());
-			fmt.Printf("Type: %s Key: %s Value: %s\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+			callback(string(ev.Kv.Key), string(ev.Kv.Value))
 		}
 	}
 }

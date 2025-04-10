@@ -12,6 +12,7 @@ import (
 
 	"time"
 	// Java: 类似 java.time.Duration，用来控制 sleep、超时
+	"fmt"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 
@@ -38,8 +39,11 @@ func main() {
 	// Java: 相当于 try-finally 块，在函数结束时自动执行 cli.close()
 
 	// 启动 watcher，监听 /foo；用 goroutine 启动后台任务，类似 Java 的 new Thread(() -> ...)
-	go watcher.WatchKey(cli, "/foo")
-
+	watcher.WatchKey(cli, "/foo", func(key, val string) {
+		fmt.Printf("🔔 收到 etcd 事件：%s = %s\n", key, val)
+	
+		// 🚧 将来你可以在这里加 cache.Set(key, val)
+	})
 	// 阻塞主线程，防止退出。select {} 是 Go 的“永久等待”，类似 Java 的 while (true) {}
 	select {}
 }
