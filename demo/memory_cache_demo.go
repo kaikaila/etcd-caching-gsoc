@@ -37,7 +37,7 @@ func testWatcherWithMemoryCache() {
 
 	// 启动 watcher，监听 /foo；用 goroutine 启动后台任务，类似 Java 的 new Thread(() -> ...)
 	sink := c.(cache.CacheWithSink)
-	watcher.WatchKey(cli, "/foo", sink.HandlePut, sink.HandleDelete)
+	watcher.WatchKeySimple(cli, "/foo", sink.HandlePut, sink.HandleDelete)
 	
 	
 	go func() {
@@ -55,3 +55,6 @@ func testWatcherWithMemoryCache() {
 	// 阻塞主线程，防止退出。select {} 是 Go 的“永久等待”，类似 Java 的 while (true) {}
 	select {}
 }
+
+
+

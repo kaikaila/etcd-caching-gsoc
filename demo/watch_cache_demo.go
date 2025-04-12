@@ -10,14 +10,14 @@ import (
 )
 
 func testWatcherWithWatchCache() {
-	wc := cache.NewWatchCache(nil)
+	wc_temp := cache.NewMemoryCache()
 	cli, _ := clientv3.New(clientv3.Config{
 		Endpoints:   []string{"localhost:2379"},
 		DialTimeout: 5 * time.Second,
 	})
 
 	defer cli.Close()
-
+	wc := wc_temp.(cache.CacheWithSink)
 	watcher.WatchKey(cli, "/foo", wc.HandlePut, wc.HandleDelete)
 
 	go func() {

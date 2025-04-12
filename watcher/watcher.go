@@ -33,3 +33,42 @@ func WatchKey(cli *clientv3.Client, key string, onPut func(string, string), onDe
 		}
 	}
 }
+
+// for memoryCache
+func WatchKeySimple(cli *clientv3.Client, key string, onPut func(string, string), onDelete func(string)) {
+	ch := cli.Watch(context.Background(), key, clientv3.WithPrefix())
+	go func() {
+		for resp := range ch {
+			for _, ev := range resp.Events {
+				k := string(ev.Kv.Key)
+				v := string(ev.Kv.Value)
+				switch ev.Type {
+				case clientv3.EventTypePut:
+					onPut(k, v)
+				case clientv3.EventTypeDelete:
+					onDelete(k)
+				}
+			}
+		}
+	}()
+}
+
+//for watchCache
+func WatchKeyWithRevision(cli *clientv3.Client, key string, onPut func(string, string, int64), onDelete func(string, int64)) {
+	ch := cli.Watch(context.Background(), key, clientv3.WithPrefix())
+	go func() {
+		for resp := range ch {
+			for _, ev := range resp.Events {
+				k := string(ev.Kv.Key)
+				v := string(ev.Kv.Value)
+				rev := ev.Kv.ModRevision
+				switch ev.Type {
+				case clientv3.EventTypePut:
+					onPut(k, v, rev)
+				case clientv3.EventTypeDelete:
+					onDelete(k, rev)
+				}
+			}
+		}
+	}()
+}
