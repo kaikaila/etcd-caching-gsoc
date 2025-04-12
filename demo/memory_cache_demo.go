@@ -1,7 +1,5 @@
 package main
 
-// Java: 相当于 public class Main，main 函数的入口类必须是这个名字
-
 import (
 
 	// Java: 类似 java.time.Duration，用来控制 sleep、超时
@@ -15,7 +13,7 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
-func main() {
+func testWatcherWithMemoryCache() {
 	// Java: 相当于 public static void main(String[] args) {}
 	
 	// 创建一个内存缓存实例
