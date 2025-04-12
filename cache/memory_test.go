@@ -2,8 +2,11 @@ package cache
 
 import "testing"
 
+// RunBasicCacheTests runs a suite of unit tests against any implementation of the Cache interface.
+// It verifies expected behavior for basic operations like Set, Get, key overwrite, and handling of missing keys.
+// This test can be reused across multiple Cache implementations to ensure compliance with the interface contract.
 func RunBasicCacheTests(t *testing.T, c Cache) {
-    /* this test should be applied to any class which implements cache interface */
+    
     // Basic Set and Get test 
     c.Set("foo", "bar")
 

@@ -2,34 +2,36 @@ package cache
 
 import "sync"
 
-// memoryCache 是 Cache 接口的内存实现，使用 map 存储数据，并用互斥锁确保并发安全
-// Java: 相当于 class MemoryCache implements Cache { Map store; synchronized(lock) {...} }
+// memoryCache is a thread-safe in-memory implementation of the Cache interface.
 type memoryCache struct {
-    store map[string]string // 存储实际的 key-value 对
-    mu    sync.Mutex        // 用于加锁保护 map 的并发访问
+	store map[string]string
+	mu    sync.Mutex
 }
 
-// NewMemoryCache 是构造函数，返回一个新的 Cache 实例
-// Java: 相当于 new MemoryCache()
+// NewMemoryCache creates a new memoryCache instance.
 func NewMemoryCache() Cache {
-    return &memoryCache{
-        store: make(map[string]string), // 初始化 map
-    }
+	return &memoryCache{
+		store: make(map[string]string),
+	}
 }
 
-// Get 实现了 Cache 接口的 Get 方法，带互斥锁保护
 func (m *memoryCache) Get(key string) (string, bool) {
-    m.mu.Lock()         // 加锁，保证 map 并发读写安全
-    defer m.mu.Unlock() // 延迟释放锁，函数退出时自动执行
-
-    val, ok := m.store[key] // 从 map 中读取 key
-    return val, ok          // 返回 value 和是否存在
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	val, ok := m.store[key]
+	return val, ok
 }
 
-// Set 实现了 Cache 接口的 Set 方法，带互斥锁保护
 func (m *memoryCache) Set(key string, value string) {
-    m.mu.Lock()         // 加锁，防止其他 goroutine 同时修改 map
-    defer m.mu.Unlock() // 延迟释放锁
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.store[key] = value
+}
 
-    m.store[key] = value // 写入或更新 key 的值
+func (m *memoryCache) HandlePut(k, v string) {
+	m.Set(k, v)
+}
+
+func (m *memoryCache) HandleDelete(k string) {
+	m.Set(k, "") // TODO: support actual deletion
 }

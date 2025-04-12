@@ -38,11 +38,7 @@ func main() {
 	
 
 	// 启动 watcher，监听 /foo；用 goroutine 启动后台任务，类似 Java 的 new Thread(() -> ...)
-	watcher.WatchKey(cli, "/foo", func(key, val string) {
-		fmt.Printf("roger etcd events：%s = %s\n", key, val)
-		c.Set(key,val)
-		// 将来你可以在这里加 cache.Set(key, val)
-	})
+	watcher.WatchKey(cli, "/foo", c.HandlePut, c.HandleDelete)
 	
 	
 	go func() {
