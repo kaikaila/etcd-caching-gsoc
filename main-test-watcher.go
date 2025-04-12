@@ -24,7 +24,8 @@ func main_temp() {
 	// 用 WatchKey 监听 "/foo"
 	watcher.WatchKey(cli, "/foo", func(key, val string) {
 		fmt.Printf("✅ 收到 etcd 变更事件：key=%s, value=%s\n", key, val)
-	})
+	},func(key string) {
+		fmt.Printf("✅ 删除 etcd 变更事件：key=%s, value=%s\n", key)})
 
 	// 主线程挂起，等你在另一个终端执行 etcdctl
 	select {}
