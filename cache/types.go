@@ -1,5 +1,12 @@
 package cache
 
+type WatchCacheInterface interface {
+	HandlePut(key, val string, rev int64)
+	HandleDelete(key string, rev int64)
+	Get(key string) (string, bool)
+	Revision() int64
+}
+
 // CacheWithSink represents a cache implementation that can also handle etcd watch events.
 // Implementations must satisfy both the Cache and EventSink interfaces.
 type CacheWithSink interface {
