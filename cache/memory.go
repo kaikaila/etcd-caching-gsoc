@@ -3,6 +3,7 @@ package cache
 import "sync"
 
 // memoryCache is a thread-safe in-memory implementation of the Cache interface.
+// It also implements EventSink and is returned as a CacheWithSink from NewMemoryCache.
 type memoryCache struct {
 	store map[string]string
 	mu    sync.Mutex

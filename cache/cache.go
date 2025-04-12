@@ -1,4 +1,11 @@
 package cache
+
+// CacheWithSink represents a cache implementation that can also handle etcd watch events.
+// Implementations must satisfy both the Cache and EventSink interfaces.
+type CacheWithSink interface {
+	Cache
+	EventSink
+}
 type Cache interface {
 	Get(key string)(string, bool)
 	Set(key string, value string)

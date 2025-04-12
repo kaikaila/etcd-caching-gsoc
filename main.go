@@ -38,7 +38,8 @@ func main() {
 	
 
 	// 启动 watcher，监听 /foo；用 goroutine 启动后台任务，类似 Java 的 new Thread(() -> ...)
-	watcher.WatchKey(cli, "/foo", c.HandlePut, c.HandleDelete)
+	sink := c.(cache.CacheWithSink)
+	watcher.WatchKey(cli, "/foo", sink.HandlePut, sink.HandleDelete)
 	
 	
 	go func() {
