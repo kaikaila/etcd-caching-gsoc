@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/kaikaila/etcd-caching-gsoc/cache"
@@ -10,25 +11,31 @@ import (
 )
 
 func testWatcherWithWatchCache() {
-	wc_temp := cache.NewMemoryCache()
-	cli, _ := clientv3.New(clientv3.Config{
+	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{"localhost:2379"},
 		DialTimeout: 5 * time.Second,
 	})
-
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer cli.Close()
-	wc := wc_temp.(cache.CacheWithSink)
-	watcher.WatchKey(cli, "/foo", wc.HandlePut, wc.HandleDelete)
 
+	wc := cache.NewWatchCache(nil)
+
+	watcher.WatchKeyWithRevision(cli, "/foo", wc.HandlePut, wc.HandleDelete)
+
+	// 持续读取 WatchCache 并打印状态与 revision
 	go func() {
 		for {
-			v, ok := wc.Get("/foo")
+			val, ok := wc.Get("/foo")
 			if ok {
-				fmt.Println(" watchcache → /foo = ", v)
+				fmt.Printf("read from watchcache /foo = %s [rev = %d]\n", val, wc.Revision())
+			} else {
+				fmt.Printf("read from watchcache /foo = (not found) [rev = %d]\n", wc.Revision())
 			}
 			time.Sleep(2 * time.Second)
 		}
 	}()
 
-	select {}
+	select {} // 阻塞主线程
 }
