@@ -27,6 +27,15 @@ func (w *WatchCache) HandlePut(key, val string, rev int64) {
 func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, rev int64) {
     w.mu.Lock()
     defer w.mu.Unlock()
+    if rev <= w.revision {
+        return
+    }
+    w.store[key] = &storeObj{
+        Key:      key,
+        Value:    valBytes,
+        Revision: rev,
+    }
+    w.revision = rev
     if w.eventSink != nil {
         w.eventSink.HandlePut(key, string(valBytes))
     }
