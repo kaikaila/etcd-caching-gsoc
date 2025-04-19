@@ -112,7 +112,7 @@ func (wc *WatchCache) NewSnapshotView() *SnapshotView {
 	for _, obj := range snap {
 	  items = append(items, obj)
 	}
-	// Optional: sort by keys
+	// This is to sort by revision.  Optional for implementation: sort by keys
 	sort.Slice(items, func(i, j int) bool {
 	  return items[i].Revision < items[j].Revision
 	})

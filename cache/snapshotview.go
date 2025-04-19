@@ -5,6 +5,8 @@ type SnapshotView struct {
   Data []*storeObj
 }
 
+// the constructor is in watchcache.go
+
 // Page returns items for the given page number (1-based) and page size.
 func (sv *SnapshotView) Page(page, size int) []*storeObj {
   start := (page - 1) * size
