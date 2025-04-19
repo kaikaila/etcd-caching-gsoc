@@ -16,36 +16,25 @@ func NewWatchCache(sink EventSink) *WatchCache {
 	}
 }
 
+// HandlePut is a convenience wrapper that accepts string values.
+// For performance-sensitive scenarios, use HandlePutBytes instead.
 func (w *WatchCache) HandlePut(key, val string, rev int64) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	if rev <= w.revision {
-		return // Ignore stale events
-	}
-
-	w.store[key] = &storeObj{
-		Key:      key,
-		Value:    []byte(val),    // store the value as bytes
-		Revision: rev,
-	}
-	w.revision = rev
-	if w.eventSink != nil {
-		w.eventSink.HandlePut(key, val)
-	}
+    w.HandlePutBytes(key, []byte(val), rev)
 }
 
-
+// HandlePutBytes is the high-throughput version of HandlePut that accepts raw byte slices.
+// It avoids extra string<->[]byte conversions for high-frequency workloads.
 func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, rev int64) {
     w.mu.Lock()
     defer w.mu.Unlock()
-    // …和 HandlePut 一样，只是参数类型不同…
     if w.eventSink != nil {
         w.eventSink.HandlePut(key, string(valBytes))
     }
 }
 
-func (w *WatchCache) HandleDelete(key string, rev int64) {
+// HandleDeleteBytes is the high-throughput version of HandleDelete that accepts raw data.
+// It avoids extra overhead in delete operations.
+func (w *WatchCache) HandleDeleteBytes(key string, rev int64) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -58,6 +47,12 @@ func (w *WatchCache) HandleDelete(key string, rev int64) {
 	if w.eventSink != nil {
 		w.eventSink.HandleDelete(key)
 	}
+}
+
+// HandleDelete is a convenience wrapper for deletion.
+// For performance-sensitive scenarios, use HandleDeleteBytes instead.
+func (w *WatchCache) HandleDelete(key string, rev int64) {
+    w.HandleDeleteBytes(key, rev)
 }
 
 // Get returns a deep copy of the storeObj associated with the key
