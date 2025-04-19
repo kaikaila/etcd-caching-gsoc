@@ -1,11 +1,14 @@
 package cache
 
-import "sync"
+import (
+	"sort"
+	"sync"
+)
 
 type WatchCache struct {
 	mu        sync.RWMutex
 	store     map[string]*storeObj // The current latest key-value state snapshot
-	revision  int64             // The latest revision, ensures order consistency
+	globalRevision  int64             // The latest global revision, ensures order consistency
 	eventSink EventSink         // Downstream sink (observer pattern)
 }
 
@@ -27,15 +30,20 @@ func (w *WatchCache) HandlePut(key, val string, rev int64) {
 func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, rev int64) {
     w.mu.Lock()
     defer w.mu.Unlock()
-    if rev <= w.revision {
-        return
-    }
+    existing, ok := w.store[key]
+	if ok && rev <= existing.Revision {
+		return
+	}
     w.store[key] = &storeObj{
         Key:      key,
         Value:    valBytes,
         Revision: rev,
     }
-    w.revision = rev
+
+	if rev > w.globalRevision {
+		w.globalRevision = rev
+	}
+
     if w.eventSink != nil {
         w.eventSink.HandlePut(key, string(valBytes))
     }
@@ -47,12 +55,15 @@ func (w *WatchCache) HandleDeleteBytes(key string, rev int64) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	if rev <= w.revision {
+	existing, ok := w.store[key]
+	if ok && rev <= existing.Revision {
 		return
 	}
 
 	delete(w.store, key)
-	w.revision = rev
+	if rev > w.globalRevision {
+		w.globalRevision = rev
+	}
 	if w.eventSink != nil {
 		w.eventSink.HandleDelete(key)
 	}
@@ -79,7 +90,7 @@ func (w *WatchCache) Get(key string) (*storeObj, bool) {
 func (w *WatchCache) Revision() int64 {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.revision
+	return w.globalRevision
 }
 
 // Snapshot returns a deep copy of the cache, in case external modification
@@ -93,3 +104,17 @@ func (wc *WatchCache) Snapshot() map[string]*storeObj {
     }
     return snapshot
 }
+
+// NewSnapshotView builds a view from the cache snapshot.
+func (wc *WatchCache) NewSnapshotView() *SnapshotView {
+	snap := wc.Snapshot()
+	items := make([]*storeObj, 0, len(snap))
+	for _, obj := range snap {
+	  items = append(items, obj)
+	}
+	// Optional: sort by keys
+	sort.Slice(items, func(i, j int) bool {
+	  return items[i].Revision < items[j].Revision
+	})
+	return &SnapshotView{Data: items}
+  }

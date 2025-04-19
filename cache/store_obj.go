@@ -7,7 +7,7 @@ import "go.etcd.io/etcd/api/v3/mvccpb"
 type storeObj struct {
     Key         string
     Value       []byte
-    Revision    int64
+    Revision    int64 // per-key revision
     ModRevision int64
     EventType   mvccpb.Event_EventType
 }

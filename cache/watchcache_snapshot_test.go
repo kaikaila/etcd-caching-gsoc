@@ -64,3 +64,51 @@ func TestSnapshotConcurrentSafety(t *testing.T) {
 
 	wg.Wait()
 }
+
+// TestNewSnapshotViewPaging verifies that NewSnapshotView correctly orders snapshot data
+// and that paging returns the expected subsets.
+func TestNewSnapshotViewPaging(t *testing.T) {
+    // Initialize cache and insert entries with out-of-order revisions
+    wc := NewWatchCache(nil)
+    wc.HandlePut("a", "valA", 1)
+    wc.HandlePut("b", "valB", 3)
+    wc.HandlePut("c", "valC", 2)
+
+    // Build a snapshot view
+    sv := wc.NewSnapshotView()
+
+    // Verify Data length and sorting by Revision ascending
+    if len(sv.Data) != 3 {
+        t.Fatalf("expected 3 items in SnapshotView, got %d", len(sv.Data))
+    }
+    expectedRevs := []int64{1, 2, 3}
+    for i, obj := range sv.Data {
+        if obj.Revision != expectedRevs[i] {
+            t.Fatalf("at index %d expected revision %d, got %d", i, expectedRevs[i], obj.Revision)
+        }
+    }
+
+    // Test paging: page size 2
+    page1 := sv.Page(1, 2)
+    if len(page1) != 2 {
+        t.Fatalf("expected 2 items on page 1, got %d", len(page1))
+    }
+    if page1[0].Revision != 1 || page1[1].Revision != 2 {
+        t.Fatalf("page1 revisions mismatch: got [%d, %d]", page1[0].Revision, page1[1].Revision)
+    }
+
+    page2 := sv.Page(2, 2)
+    if len(page2) != 1 {
+        t.Fatalf("expected 1 item on page 2, got %d", len(page2))
+    }
+    if page2[0].Revision != 3 {
+        t.Fatalf("page2 revision mismatch: expected 3, got %d", page2[0].Revision)
+    }
+
+    // Out-of-range page should return empty slice
+    page3 := sv.Page(3, 2)
+    if len(page3) != 0 {
+        t.Fatalf("expected 0 items on page 3, got %d", len(page3))
+    }
+}
+
