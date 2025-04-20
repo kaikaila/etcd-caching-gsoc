@@ -1,8 +1,11 @@
 package cache
 
 import (
+	"fmt"
 	"sort"
 	"sync"
+
+	"github.com/kaikaila/etcd-caching-gsoc/cache/event"
 )
 
 type WatchCache struct {
@@ -11,7 +14,7 @@ type WatchCache struct {
 	keyRevisions  map[string]int64      // tracks per-key revision counters
 	globalRevision int64                 // GlobalRevision tracks the total number of write operations across all keys.
 	eventSink     EventSink             // Downstream sink (observer pattern)
-
+	eventLog event.EventLog
 	// Optional: If we need to analyze key write frequency, enable eviction policies,
 	// or track the most updated key, consider adding:
 	// MaxPerKeyRevision int64 // highest key-local revision among all keys
@@ -101,6 +104,21 @@ func (w *WatchCache) Get(key string) (*StoreObj, bool) {
 	}
 	// return a deep copy so caller cannot mutate internal state
 	return obj.DeepCopy(), true
+}
+
+func (w *WatchCache) AddEvent(ev event.Event) error {
+	switch ev.Type {
+	case event.EventPut:
+		w.HandlePutBytes(ev.Key, ev.Value, ev.GlobalRev)
+	case event.EventDelete:
+		w.HandleDeleteBytes(ev.Key, ev.GlobalRev)
+	default:
+		return fmt.Errorf("unsupported event type: %v", ev.Type)
+	}
+	if w.eventLog != nil {
+		return w.eventLog.Append(ev)
+	}
+	return nil
 }
 
 func (w *WatchCache) Revision() int64 {

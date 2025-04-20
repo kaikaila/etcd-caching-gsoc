@@ -1,10 +1,5 @@
 package event
 
-import (
-	"github.com/kaikaila/etcd-caching-gsoc/cache"
-	"go.etcd.io/etcd/api/v3/mvccpb"
-)
-
 // EventType represents the type of operation that occurred on a key.
 type EventType int
 
@@ -23,15 +18,3 @@ type Event struct {
     GlobalRev   int64     // 全局排序用的 revision（用于 replay 顺序）
 }
 
-// NewStoreObjFromEvent converts an Event into a storeObj snapshot state.
-// This is useful when rebuilding snapshot from event logs.
-func NewStoreObjFromEvent(ev Event) *cache.StoreObj {
-    return &cache.StoreObj{
-        Key:            ev.Key,
-        Value:          ev.Value,
-        KeyRev:         ev.KeyRev,
-        GlobalRev:      ev.GlobalRev,
-        ModRev:         ev.GlobalRev, // or ev.ModRev if future events carry it separately
-        EventType:      mvccpb.Event_EventType(ev.Type), // convert to etcd's enum type
-    }
-}
