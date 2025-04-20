@@ -11,11 +11,9 @@ const (
 
 // Event represents a single operation that occurred in the system.
 type Event struct {
-    Type        EventType // 操作类型，例如 PUT 或 DELETE
-    Key         string    // 被操作的 key
-    Value       []byte    // 当前值（如果是 DELETE，则可以为 nil）
-    KeyRev int64     // 该 key 的局部版本号（用于快照判断是否为最新）
-    GlobalRev   int64     // 全局排序用的 revision（用于 replay 顺序）
-    ModRev int64
+    Type      EventType // Type of operation: PUT or DELETE
+    Key       string    // The key that was operated on
+    Value     []byte    // The new value (nil if DELETE)
+    GlobalRev int64     // Monotonic revision assigned by the watch cache, used for local event ordering
+    ModRev    int64     // etcd's original ModRevision for this key
 }
-

@@ -18,7 +18,6 @@ func testWatcherWithLogOutput() {
 	cache.AddEvent(event.Event{
 		Key:       "foo",
 		Value:     []byte("bar"),
-		KeyRev:    1,
 		GlobalRev: 100,
 		Type:      event.EventPut,
 		ModRev:    100,
@@ -26,7 +25,6 @@ func testWatcherWithLogOutput() {
 	cache.AddEvent(event.Event{
 		Key:       "baz",
 		Value:     []byte("qux"),
-		KeyRev:    1,
 		GlobalRev: 101,
 		Type:      event.EventPut,
 		ModRev:    101,

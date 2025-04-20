@@ -17,10 +17,9 @@ var (
 type WatchCache struct {
 	mu            sync.RWMutex
 	store         map[string]*StoreObj // The current latest key-value state snapshot
-	keyRevisions  map[string]int64      // tracks per-key revision counters
-	globalRevision int64                 // GlobalRevision tracks the total number of write operations across all keys.
+	revision      int64                 // revision tracks the total number of write operations across all keys.
 	eventSink     EventSink             // Downstream sink (observer pattern)
-	eventLog event.EventLog
+	eventLog      event.EventLog
 	// Optional: If we need to analyze key write frequency, enable eviction policies,
 	// or track the most updated key, consider adding:
 	// MaxPerKeyRevision int64 // highest key-local revision among all keys
@@ -28,19 +27,17 @@ type WatchCache struct {
 
 func NewWatchCache(sink EventSink) *WatchCache {
 	return &WatchCache{
-		store:         make(map[string]*StoreObj),
-		keyRevisions:  make(map[string]int64),
-		eventSink:     sink,
-		}
+		store:     make(map[string]*StoreObj),
+		eventSink: sink,
 	}
+}
 
 // NewWatchCacheWithLog creates a WatchCache with an optional event log sink.
 func NewWatchCacheWithLog(sink EventSink, log event.EventLog) *WatchCache {
 	return &WatchCache{
-		store:        make(map[string]*StoreObj),
-		keyRevisions: make(map[string]int64),
-		eventSink:    sink,
-		eventLog:     log,
+		store:     make(map[string]*StoreObj),
+		eventSink: sink,
+		eventLog:  log,
 	}
 }
 
@@ -56,23 +53,19 @@ func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, globalRev int64
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	newKeyRev := w.keyRevisions[key] + 1
 	existing, ok := w.store[key]
 	if ok && globalRev <= existing.GlobalRev {
 		return
 	}
 
-	w.keyRevisions[key] = newKeyRev
-
 	w.store[key] = &StoreObj{
-		Key:            key,
-		Value:          valBytes,
-		KeyRev:       newKeyRev,
+		Key:      key,
+		Value:    valBytes,
 		GlobalRev: globalRev,
 	}
 
-	if globalRev > w.globalRevision {
-		w.globalRevision = globalRev
+	if globalRev > w.revision {
+		w.revision = globalRev
 	}
 
 	if w.eventSink != nil {
@@ -86,18 +79,15 @@ func (w *WatchCache) HandleDeleteBytes(key string, globalRev int64) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	newKeyRev := w.keyRevisions[key] + 1
 	existing, ok := w.store[key]
 	if ok && globalRev <= existing.GlobalRev {
 		return
 	}
 
-	w.keyRevisions[key] = newKeyRev
-
 	delete(w.store, key)
 
-	if globalRev > w.globalRevision {
-		w.globalRevision = globalRev
+	if globalRev > w.revision {
+		w.revision = globalRev
 	}
 	if w.eventSink != nil {
 		w.eventSink.HandleDelete(key)
@@ -140,7 +130,7 @@ func (w *WatchCache) AddEvent(ev event.Event) error {
 func (w *WatchCache) Revision() int64 {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.globalRevision
+	return w.revision
 }
 
 // Snapshot returns a deep copy of the cache, in case external modification
@@ -196,4 +186,41 @@ func (wc *WatchCache) Compact(key string, rev int64) error {
 	}
 
 	return ErrInvalidRevision
+}
+
+// compactKeyIfStale is an internal helper that removes a key if its GlobalRev <= threshold.
+// Returns true if the key was removed. Returns error if an internal invariant is violated.
+func (wc *WatchCache) compactKeyIfStale(key string, threshold int64) (bool, error) {
+	obj, ok := wc.store[key]
+	if !ok {
+		return false, nil
+	}
+	if obj.GlobalRev < 0 {
+		return false, fmt.Errorf("internal error: key=%s has invalid revision %d", key, obj.GlobalRev)
+	}
+	if obj.GlobalRev <= threshold {
+		delete(wc.store, key)
+		return true, nil
+	}
+	return false, nil
+}
+
+// CompactAll removes all keys whose GlobalRev is older than or equal to the given threshold.
+// Returns the number of keys removed.
+func (wc *WatchCache) CompactAll(threshold int64) int {
+	wc.mu.Lock()
+	defer wc.mu.Unlock()
+
+	count := 0
+	for key := range wc.store {
+		ok, err := wc.compactKeyIfStale(key, threshold)
+		if err != nil {
+			fmt.Printf("compact error on key=%s: %v\n", key, err)
+			continue
+		}
+		if ok {
+			count++
+		}
+	}
+	return count
 }
