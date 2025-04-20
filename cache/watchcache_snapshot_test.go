@@ -77,14 +77,14 @@ func TestNewSnapshotViewPaging(t *testing.T) {
     // Build a snapshot view
     sv := wc.NewSnapshotView()
 
-    // Verify Data length and sorting by Revision ascending
+    // Verify Data length and sorting by GlobalRev ascending
     if len(sv.Data) != 3 {
         t.Fatalf("expected 3 items in SnapshotView, got %d", len(sv.Data))
     }
-    expectedRevs := []int64{1, 2, 3}
+    expectedGlobals := []int64{1, 2, 3}
     for i, obj := range sv.Data {
-        if obj.KeyRev != expectedRevs[i] {
-            t.Fatalf("at index %d expected revision %d, got %d", i, expectedRevs[i], obj.KeyRev)
+        if obj.GlobalRev != expectedGlobals[i] {
+            t.Fatalf("at index %d expected GlobalRev %d, got %d", i, expectedGlobals[i], obj.GlobalRev)
         }
     }
 
@@ -111,4 +111,3 @@ func TestNewSnapshotViewPaging(t *testing.T) {
         t.Fatalf("expected 0 items on page 3, got %d", len(page3))
     }
 }
-
