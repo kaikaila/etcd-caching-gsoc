@@ -16,5 +16,6 @@ type Event struct {
     Value       []byte    // 当前值（如果是 DELETE，则可以为 nil）
     KeyRev int64     // 该 key 的局部版本号（用于快照判断是否为最新）
     GlobalRev   int64     // 全局排序用的 revision（用于 replay 顺序）
+    ModRev int64
 }
 

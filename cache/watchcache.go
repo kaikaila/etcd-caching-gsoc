@@ -25,6 +25,16 @@ func NewWatchCache(sink EventSink) *WatchCache {
 		store:         make(map[string]*StoreObj),
 		keyRevisions:  make(map[string]int64),
 		eventSink:     sink,
+		}
+	}
+
+// NewWatchCacheWithLog creates a WatchCache with an optional event log sink.
+func NewWatchCacheWithLog(sink EventSink, log event.EventLog) *WatchCache {
+	return &WatchCache{
+		store:        make(map[string]*StoreObj),
+		keyRevisions: make(map[string]int64),
+		eventSink:    sink,
+		eventLog:     log,
 	}
 }
 
