@@ -124,3 +124,34 @@ func TestWatchCache_AddEvent_Put(t *testing.T) {
 	assert.Equal(t, "alpha", events[0].Key)
 	assert.Equal(t, event.EventPut, events[0].Type)
 }
+
+func TestAddEventReplay(t *testing.T) {
+	log := event.NewMemoryEventLog(5)
+	cache := NewWatchCacheWithLog(nil, log)
+
+	cache.AddEvent(event.Event{
+		Key:       "foo",
+		Value:     []byte("bar"),
+		KeyRev:    1,
+		GlobalRev: 100,
+		Type:      event.EventPut,
+		ModRev:    100,
+	})
+	cache.AddEvent(event.Event{
+		Key:       "baz",
+		Value:     []byte("qux"),
+		KeyRev:    1,
+		GlobalRev: 101,
+		Type:      event.EventPut,
+		ModRev:    101,
+	})
+
+	events, err := log.Replay(0)
+	assert.NoError(t, err)
+	assert.Len(t, events, 2)
+	assert.Equal(t, "foo", events[0].Key)
+	assert.Equal(t, "bar", string(events[0].Value))
+	assert.Equal(t, "baz", events[1].Key)
+	assert.Equal(t, "qux", string(events[1].Value))
+}
+

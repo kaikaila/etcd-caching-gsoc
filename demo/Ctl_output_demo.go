@@ -24,11 +24,12 @@ func testWatcherWithCtlOutput() {
 	}
 	defer cli.Close()
 
-	// Use WatchKey to watch "/foo"
-	watcher.WatchKey(cli, "/foo", func(key, val string) {
-		fmt.Printf("✅ 收到 etcd 变更事件：key=%s, value=%s\n", key, val)
-	},func(key string) {
-		fmt.Printf("✅ 删除 etcd 变更事件：key=%s", key)})
+	// Use WatchKey to watch "/foo" (wrapped in a goroutine so it doesn't block)
+	go watcher.WatchKey(cli, "/foo", func(key, val string) {
+		fmt.Printf("✅ Received etcd event: key=%s, value=%s\n", key, val)
+	}, func(key string) {
+		fmt.Printf("✅ Deleted etcd event: key=%s\n", key)
+	})
 
 	// Automatically write to etcd to trigger watcher callback
 	go func() {
@@ -43,5 +44,7 @@ func testWatcherWithCtlOutput() {
 		}
 	}()
 	// Block the main thread (previously waited for etcdctl commands)
-	select {}
+	// select {}
+	time.Sleep(10 * time.Second)
+	fmt.Println("🛑 TestWatcherWithCtlOutput finished. Proceeding to next test...")
 }

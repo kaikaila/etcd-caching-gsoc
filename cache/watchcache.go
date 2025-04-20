@@ -1,11 +1,17 @@
 package cache
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
 
 	"github.com/kaikaila/etcd-caching-gsoc/cache/event"
+)
+
+var (
+	ErrKeyNotFound     = errors.New("key not found in WatchCache")
+	ErrInvalidRevision = errors.New("revision too old or newer than current")
 )
 
 type WatchCache struct {
@@ -161,4 +167,33 @@ func (wc *WatchCache) NewSnapshotView() *SnapshotView {
 		return items[i].GlobalRev < items[j].GlobalRev
 	})
 	return &SnapshotView{Data: items}
+}
+
+// Compact removes historical versions of a key older than or equal to the given revision.
+//
+// Error semantics:
+// - ErrKeyNotFound: the specified key does not exist in cache.
+// - ErrInvalidRevision: the key exists but its revision is newer than the given threshold.
+// - fmt.Errorf(...): internal invariant failure, such as invalid negative revision.
+//   This should never occur under correct operation and indicates a deeper bug.
+func (wc *WatchCache) Compact(key string, rev int64) error {
+	wc.mu.Lock()
+	defer wc.mu.Unlock()
+
+	existing, ok := wc.store[key]
+	if !ok {
+		return ErrKeyNotFound
+	}
+
+	if existing.GlobalRev <= rev {
+		delete(wc.store, key)
+		return nil
+	}
+
+	// Safety check: invariant that GlobalRev should always be >= 0
+	if existing.GlobalRev < 0 {
+		return fmt.Errorf("internal error: key=%s has invalid revision %d", key, existing.GlobalRev)
+	}
+
+	return ErrInvalidRevision
 }
