@@ -6,63 +6,79 @@ import (
 )
 
 type WatchCache struct {
-	mu        sync.RWMutex
-	store     map[string]*storeObj // The current latest key-value state snapshot
-	globalRevision  int64             // The latest global revision, ensures order consistency
-	eventSink EventSink         // Downstream sink (observer pattern)
+	mu            sync.RWMutex
+	store         map[string]*StoreObj // The current latest key-value state snapshot
+	keyRevisions  map[string]int64      // tracks per-key revision counters
+	globalRevision int64                 // GlobalRevision tracks the total number of write operations across all keys.
+	eventSink     EventSink             // Downstream sink (observer pattern)
+
+	// Optional: If we need to analyze key write frequency, enable eviction policies,
+	// or track the most updated key, consider adding:
+	// MaxPerKeyRevision int64 // highest key-local revision among all keys
 }
 
 func NewWatchCache(sink EventSink) *WatchCache {
 	return &WatchCache{
-		store:     make(map[string]*storeObj),
-		eventSink: sink,
+		store:         make(map[string]*StoreObj),
+		keyRevisions:  make(map[string]int64),
+		eventSink:     sink,
 	}
 }
 
 // HandlePut is a convenience wrapper that accepts string values.
 // For performance-sensitive scenarios, use HandlePutBytes instead.
-func (w *WatchCache) HandlePut(key, val string, rev int64) {
-    w.HandlePutBytes(key, []byte(val), rev)
+func (w *WatchCache) HandlePut(key, val string, globalRev int64) {
+	w.HandlePutBytes(key, []byte(val), globalRev)
 }
 
 // HandlePutBytes is the high-throughput version of HandlePut that accepts raw byte slices.
 // It avoids extra string<->[]byte conversions for high-frequency workloads.
-func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, rev int64) {
-    w.mu.Lock()
-    defer w.mu.Unlock()
-    existing, ok := w.store[key]
-	if ok && rev <= existing.Revision {
+func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, globalRev int64) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	newKeyRev := w.keyRevisions[key] + 1
+	existing, ok := w.store[key]
+	if ok && globalRev <= existing.GlobalRev {
 		return
 	}
-    w.store[key] = &storeObj{
-        Key:      key,
-        Value:    valBytes,
-        Revision: rev,
-    }
 
-	if rev > w.globalRevision {
-		w.globalRevision = rev
+	w.keyRevisions[key] = newKeyRev
+
+	w.store[key] = &StoreObj{
+		Key:            key,
+		Value:          valBytes,
+		KeyRev:       newKeyRev,
+		GlobalRev: globalRev,
 	}
 
-    if w.eventSink != nil {
-        w.eventSink.HandlePut(key, string(valBytes))
-    }
+	if globalRev > w.globalRevision {
+		w.globalRevision = globalRev
+	}
+
+	if w.eventSink != nil {
+		w.eventSink.HandlePut(key, string(valBytes))
+	}
 }
 
 // HandleDeleteBytes is the high-throughput version of HandleDelete that accepts raw data.
 // It avoids extra overhead in delete operations.
-func (w *WatchCache) HandleDeleteBytes(key string, rev int64) {
+func (w *WatchCache) HandleDeleteBytes(key string, globalRev int64) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
+	newKeyRev := w.keyRevisions[key] + 1
 	existing, ok := w.store[key]
-	if ok && rev <= existing.Revision {
+	if ok && globalRev <= existing.GlobalRev {
 		return
 	}
 
+	w.keyRevisions[key] = newKeyRev
+
 	delete(w.store, key)
-	if rev > w.globalRevision {
-		w.globalRevision = rev
+
+	if globalRev > w.globalRevision {
+		w.globalRevision = globalRev
 	}
 	if w.eventSink != nil {
 		w.eventSink.HandleDelete(key)
@@ -71,12 +87,12 @@ func (w *WatchCache) HandleDeleteBytes(key string, rev int64) {
 
 // HandleDelete is a convenience wrapper for deletion.
 // For performance-sensitive scenarios, use HandleDeleteBytes instead.
-func (w *WatchCache) HandleDelete(key string, rev int64) {
-    w.HandleDeleteBytes(key, rev)
+func (w *WatchCache) HandleDelete(key string, globalRev int64) {
+	w.HandleDeleteBytes(key, globalRev)
 }
 
-// Get returns a deep copy of the storeObj associated with the key
-func (w *WatchCache) Get(key string) (*storeObj, bool) {
+// Get returns a deep copy of the StoreObj associated with the key
+func (w *WatchCache) Get(key string) (*StoreObj, bool) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	obj, ok := w.store[key]
@@ -94,27 +110,27 @@ func (w *WatchCache) Revision() int64 {
 }
 
 // Snapshot returns a deep copy of the cache, in case external modification
-func (wc *WatchCache) Snapshot() map[string]*storeObj {
-    wc.mu.RLock()
-    defer wc.mu.RUnlock()
+func (wc *WatchCache) Snapshot() map[string]*StoreObj {
+	wc.mu.RLock()
+	defer wc.mu.RUnlock()
 
-    snapshot := make(map[string]*storeObj, len(wc.store))
-    for k, v := range wc.store {
-        snapshot[k] = v.DeepCopy()
-    }
-    return snapshot
+	snapshot := make(map[string]*StoreObj, len(wc.store))
+	for k, v := range wc.store {
+		snapshot[k] = v.DeepCopy()
+	}
+	return snapshot
 }
 
 // NewSnapshotView builds a view from the cache snapshot.
 func (wc *WatchCache) NewSnapshotView() *SnapshotView {
 	snap := wc.Snapshot()
-	items := make([]*storeObj, 0, len(snap))
+	items := make([]*StoreObj, 0, len(snap))
 	for _, obj := range snap {
-	  items = append(items, obj)
+		items = append(items, obj)
 	}
 	// This is to sort by revision.  Optional for implementation: sort by keys
 	sort.Slice(items, func(i, j int) bool {
-	  return items[i].Revision < items[j].Revision
+		return items[i].GlobalRev < items[j].GlobalRev
 	})
 	return &SnapshotView{Data: items}
-  }
+}

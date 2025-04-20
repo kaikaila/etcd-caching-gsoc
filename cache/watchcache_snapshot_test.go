@@ -83,8 +83,8 @@ func TestNewSnapshotViewPaging(t *testing.T) {
     }
     expectedRevs := []int64{1, 2, 3}
     for i, obj := range sv.Data {
-        if obj.Revision != expectedRevs[i] {
-            t.Fatalf("at index %d expected revision %d, got %d", i, expectedRevs[i], obj.Revision)
+        if obj.KeyRev != expectedRevs[i] {
+            t.Fatalf("at index %d expected revision %d, got %d", i, expectedRevs[i], obj.KeyRev)
         }
     }
 
@@ -93,16 +93,16 @@ func TestNewSnapshotViewPaging(t *testing.T) {
     if len(page1) != 2 {
         t.Fatalf("expected 2 items on page 1, got %d", len(page1))
     }
-    if page1[0].Revision != 1 || page1[1].Revision != 2 {
-        t.Fatalf("page1 revisions mismatch: got [%d, %d]", page1[0].Revision, page1[1].Revision)
+    if page1[0].GlobalRev != 1 || page1[1].GlobalRev != 2 {
+        t.Fatalf("page1 GlobalRevs mismatch: got [%d, %d]", page1[0].GlobalRev, page1[1].GlobalRev)
     }
 
     page2 := sv.Page(2, 2)
     if len(page2) != 1 {
         t.Fatalf("expected 1 item on page 2, got %d", len(page2))
     }
-    if page2[0].Revision != 3 {
-        t.Fatalf("page2 revision mismatch: expected 3, got %d", page2[0].Revision)
+    if page2[0].GlobalRev != 3 {
+        t.Fatalf("page2 GlobalRev mismatch: expected 3, got %d", page2[0].GlobalRev)
     }
 
     // Out-of-range page should return empty slice

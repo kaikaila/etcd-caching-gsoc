@@ -1,20 +1,19 @@
-// storeobj.go
 package cache
 
 import "go.etcd.io/etcd/api/v3/mvccpb"
 
-// storeObj holds a single key’s value and metadata in the cache.
-type storeObj struct {
-    Key         string
-    Value       []byte
-    Revision    int64 // per-key revision
-    ModRevision int64
-    EventType   mvccpb.Event_EventType
+// StoreObj holds a single key’s value and metadata in the cache.
+type StoreObj struct {
+    Key            string
+    Value          []byte
+    KeyRev         int64 // per-key revision: incremented only when this key changes
+    GlobalRev      int64 // global revision: indicates the change's order among all operations
+    ModRev         int64
+    EventType      mvccpb.Event_EventType
 }
 
-// DeepCopy creates a new copy of storeObj to avoid shared memory.
-func (o *storeObj) DeepCopy() *storeObj {
+// DeepCopy creates a new copy of StoreObj to avoid shared memory.
+func (o *StoreObj) DeepCopy() *StoreObj {
     copy := *o
-    // If there were slice or map fields, copy them here as well.
     return &copy
 }
