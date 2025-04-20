@@ -1,4 +1,3 @@
-// demo/main.go
 package main
 
 import (
@@ -8,18 +7,21 @@ import (
 )
 
 func main() {
-	target := flag.String("demo", "memory", "Which demo to run: memory | log | watch")
+	fmt.Println(">>> main started")
+	target := flag.String("demo", "memory", "Which demo to run: memory | ctlLog | watch | withLog")
 	flag.Parse()
 
 	switch *target {
 	case "memory":
 		testWatcherWithMemoryCache()
 	case "log":
-		testWatcherWithLogOutput()
+		testWatcherWithCtlOutput()
 	case "watch":
 		testWatcherWithWatchCache()
+	case "withLog":
+		testWatcherWithLogOutput()
 	default:
-		fmt.Println("Unknown demo target. Use -demo=memory | log | watch")
+		fmt.Println("Unknown demo target. Use -demo=memory | ctlLog | watch | withLog")
 		os.Exit(1)
 	}
 }

@@ -15,7 +15,7 @@ import (
 
 func testWatcherWithMemoryCache() {
 	// Java: 相当于 public static void main(String[] args) {}
-	
+	fmt.Println(">>> WatchWithMemoryCache started")
 	// 创建一个内存缓存实例
     c := cache.NewMemoryCache()
 

@@ -112,7 +112,7 @@ func TestWatchCache_AddEvent_Put(t *testing.T) {
 
 	val, ok := cache.Get("alpha")
 	assert.True(t, ok)
-	assert.Equal(t, "value1", val)
+	assert.Equal(t, "value1", string(val.Value))
 
 	// Check event log recorded it
 	events, err := log.Replay(0)

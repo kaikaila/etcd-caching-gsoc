@@ -11,6 +11,7 @@ import (
 )
 
 func testWatcherWithWatchCache() {
+	fmt.Println(">>> testWatcherWithWatchCache started")
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{"localhost:2379"},
 		DialTimeout: 5 * time.Second,
@@ -27,9 +28,9 @@ func testWatcherWithWatchCache() {
 	// 持续读取 WatchCache 并打印状态与 revision
 	go func() {
 		for {
-			val, ok := wc.Get("/foo")
+			storeObjIns, ok := wc.Get("/foo")
 			if ok {
-				fmt.Printf("read from watchcache /foo = %s [rev = %d]\n", val, wc.Revision())
+				fmt.Printf("read from watchcache /foo = %s [rev = %d]\n", string(storeObjIns.Value) , wc.Revision())
 			} else {
 				fmt.Printf("read from watchcache /foo = (not found) [rev = %d]\n", wc.Revision())
 			}
