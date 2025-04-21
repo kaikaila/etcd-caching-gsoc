@@ -114,9 +114,9 @@ func TestWatchCache_AddEvent_Put(t *testing.T) {
 	assert.Equal(t, "value1", string(val.Value))
 
 	// Check event log recorded it
-	events, err := log.Replay(0)
+	events, err := log.ListSince(0)
 	if err != nil {
-		fmt.Println("Replay error:", err)
+		fmt.Println("ListSince error:", err)
 		return
 	}
 	assert.Len(t, events, 1)
@@ -124,7 +124,7 @@ func TestWatchCache_AddEvent_Put(t *testing.T) {
 	assert.Equal(t, event.EventPut, events[0].Type)
 }
 
-func TestAddEventReplay(t *testing.T) {
+func TestAddEventListSince(t *testing.T) {
 	log := event.NewMemoryEventLog(5)
 	cache := NewWatchCacheWithLog(nil, log)
 
@@ -143,7 +143,7 @@ func TestAddEventReplay(t *testing.T) {
 		ModRev:    101,
 	})
 
-	events, err := log.Replay(0)
+	events, err := log.ListSince(0)
 	assert.NoError(t, err)
 	assert.Len(t, events, 2)
 	assert.Equal(t, "foo", events[0].Key)
@@ -151,4 +151,3 @@ func TestAddEventReplay(t *testing.T) {
 	assert.Equal(t, "baz", events[1].Key)
 	assert.Equal(t, "qux", string(events[1].Value))
 }
-

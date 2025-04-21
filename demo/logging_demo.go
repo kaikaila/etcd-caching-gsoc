@@ -32,9 +32,9 @@ func testWatcherWithLogOutput() {
 
 	// Replay and print
 	fmt.Println("== Replayed Events ==")
-	events, err := log.Replay(0)
+	events, err := log.ListSince(0)
 	if err != nil {
-		fmt.Println("Replay error:", err)
+		fmt.Println("ListSince (Replay) error:", err)
 		return
 	}
 	for _, ev := range events {
