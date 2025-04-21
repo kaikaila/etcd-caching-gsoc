@@ -1,19 +1,18 @@
-package event_test
+package eventlog
 
 import (
 	"testing"
 
-	"github.com/kaikaila/etcd-caching-gsoc/cache/event"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEventLogInterface(t *testing.T) {
-    log := event.NewMemoryEventLog(5)  // change this to apply the test to other eventlog implementations
+    log := NewMemoryEventLog(5)  // change this to apply the test to other eventlog implementations
 
     // Append events
-    err := log.Append(event.Event{Key: "foo", Value: []byte("v1"), GlobalRev: 100})
+    err := log.Append(Event{Key: "foo", Value: []byte("v1"), GlobalRev: 100})
     assert.NoError(t, err)
-    err = log.Append(event.Event{Key: "bar", Value: []byte("v2"), GlobalRev: 101})
+    err = log.Append(Event{Key: "bar", Value: []byte("v2"), GlobalRev: 101})
     assert.NoError(t, err)
 
     // Test ListSince

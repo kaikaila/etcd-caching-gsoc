@@ -1,4 +1,4 @@
-package cache
+package proxy
 
 type WatchCacheInterface interface {
 	// this interface cannot be defined by building upon CacheWithSink, because the methods have different signatures(i.e. rev)

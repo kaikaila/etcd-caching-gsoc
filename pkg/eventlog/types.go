@@ -1,4 +1,4 @@
-package event
+package eventlog
 
 // EventType represents the type of operation that occurred on a key.
 type EventType int

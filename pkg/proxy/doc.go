@@ -14,4 +14,4 @@ Core components:
 This package serves as the foundation of a generic watch cache proxy, enabling downstream systems
 to build client libraries and adapters on top of it.
 */
-package cache
+package proxy

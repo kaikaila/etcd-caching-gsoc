@@ -1,4 +1,4 @@
-package cache
+package proxy
 
 import "go.etcd.io/etcd/api/v3/mvccpb"
 

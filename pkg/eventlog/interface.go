@@ -1,4 +1,4 @@
-package event
+package eventlog
 
 // EventLog defines the interface for an append-only event history.
 // Different implementations may include: in-memory ring buffer, WAL file, etcd historical API, etc.

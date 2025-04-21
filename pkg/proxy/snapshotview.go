@@ -1,4 +1,4 @@
-package cache
+package proxy
 
 // SnapshotView holds an ordered slice of storeObj for paging.
 type SnapshotView struct {

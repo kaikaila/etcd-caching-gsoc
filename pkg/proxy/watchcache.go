@@ -1,4 +1,4 @@
-package cache
+package proxy
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/kaikaila/etcd-caching-gsoc/cache/event"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/eventlog"
 )
 
 var (
@@ -19,7 +19,7 @@ type WatchCache struct {
 	store         map[string]*StoreObj // The current latest key-value state snapshot
 	revision      int64                 // revision tracks the total number of write operations across all keys.
 	eventSink     EventSink             // Downstream sink (observer pattern)
-	eventLog      event.EventLog
+	eventLog      eventlog.EventLog
 	// Optional: If we need to analyze key write frequency, enable eviction policies,
 	// or track the most updated key, consider adding:
 	// MaxPerKeyRevision int64 // highest key-local revision among all keys
@@ -33,7 +33,7 @@ func NewWatchCache(sink EventSink) *WatchCache {
 }
 
 // NewWatchCacheWithLog creates a WatchCache with an optional event log sink.
-func NewWatchCacheWithLog(sink EventSink, log event.EventLog) *WatchCache {
+func NewWatchCacheWithLog(sink EventSink, log eventlog.EventLog) *WatchCache {
 	return &WatchCache{
 		store:     make(map[string]*StoreObj),
 		eventSink: sink,
@@ -112,11 +112,11 @@ func (w *WatchCache) Get(key string) (*StoreObj, bool) {
 	return obj.DeepCopy(), true
 }
 
-func (w *WatchCache) AddEvent(ev event.Event) error {
+func (w *WatchCache) AddEvent(ev eventlog.Event) error {
 	switch ev.Type {
-	case event.EventPut:
+	case eventlog.EventPut:
 		w.HandlePutBytes(ev.Key, ev.Value, ev.GlobalRev)
-	case event.EventDelete:
+	case eventlog.EventDelete:
 		w.HandleDeleteBytes(ev.Key, ev.GlobalRev)
 	default:
 		return fmt.Errorf("unsupported event type: %v", ev.Type)

@@ -1,11 +1,11 @@
-package cache
+package proxy
 
 import (
 	"fmt"
 	"sync"
 	"testing"
 
-	"github.com/kaikaila/etcd-caching-gsoc/cache/event"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/eventlog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -95,14 +95,14 @@ func TestWatchCache_ConcurrentAccess(t *testing.T) {
 
 func TestWatchCache_AddEvent_Put(t *testing.T) {
 	sink := newDummySink()
-	log := event.NewMemoryEventLog(10)
+	log := eventlog.NewMemoryEventLog(10)
 	cache := NewWatchCacheWithLog(sink, log)
 
-	ev := event.Event{
+	ev := eventlog.Event{
 		Key:        "alpha",
 		Value:      []byte("value1"),
 		GlobalRev:  100,
-		Type:       event.EventPut,
+		Type:       eventlog.EventPut,
 		ModRev:     100,
 	}
 
@@ -121,25 +121,25 @@ func TestWatchCache_AddEvent_Put(t *testing.T) {
 	}
 	assert.Len(t, events, 1)
 	assert.Equal(t, "alpha", events[0].Key)
-	assert.Equal(t, event.EventPut, events[0].Type)
+	assert.Equal(t, eventlog.EventPut, events[0].Type)
 }
 
 func TestAddEventListSince(t *testing.T) {
-	log := event.NewMemoryEventLog(5)
+	log := eventlog.NewMemoryEventLog(5)
 	cache := NewWatchCacheWithLog(nil, log)
 
-	cache.AddEvent(event.Event{
+	cache.AddEvent(eventlog.Event{
 		Key:       "foo",
 		Value:     []byte("bar"),
 		GlobalRev: 100,
-		Type:      event.EventPut,
+		Type:      eventlog.EventPut,
 		ModRev:    100,
 	})
-	cache.AddEvent(event.Event{
+	cache.AddEvent(eventlog.Event{
 		Key:       "baz",
 		Value:     []byte("qux"),
 		GlobalRev: 101,
-		Type:      event.EventPut,
+		Type:      eventlog.EventPut,
 		ModRev:    101,
 	})
 

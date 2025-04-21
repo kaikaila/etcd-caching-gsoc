@@ -1,5 +1,5 @@
 /*
-Package event provides modular backends for persisting and replaying etcd change events.
+Package eventlog provides modular backends for persisting and replaying etcd change events.
 
 This package defines:
 - Event: the internal representation of a cache-level change event, including key, value, revision info.
@@ -10,4 +10,4 @@ This package defines:
 This subpackage enables features such as replay, audit, snapshot recovery, and diff-based views
 by providing a standardized event stream across caching layers.
 */
-package event
+package eventlog

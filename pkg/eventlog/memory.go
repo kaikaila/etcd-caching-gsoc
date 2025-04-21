@@ -1,4 +1,4 @@
-package event
+package eventlog
 
 // MemoryEventLog is the default in-memory implementation of EventLog.
 // It uses a slice as a ring buffer to store recent events.

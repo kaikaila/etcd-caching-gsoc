@@ -1,13 +1,13 @@
-package cache
+package proxy
 
 import (
-	"github.com/kaikaila/etcd-caching-gsoc/cache/event"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/eventlog"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 // NewStoreObjFromEvent converts an Event into a storeObj snapshot state.
 // This is useful when rebuilding snapshot from event logs.
-func NewStoreObjFromEvent(ev event.Event) *StoreObj {
+func NewStoreObjFromEvent(ev eventlog.Event) *StoreObj {
     return &StoreObj{
         Key:            ev.Key,
         Value:          ev.Value,
