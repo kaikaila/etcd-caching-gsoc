@@ -31,8 +31,8 @@ func (l *MemoryEventLog) Append(ev Event) error {
     return nil
 }
 
-// Replay returns all events with GlobalRev >= fromRev.
-func (l *MemoryEventLog) Replay(fromRev int64) ([]Event, error) {
+// ListSince returns all events with GlobalRev >= fromRev.
+func (l *MemoryEventLog) ListSince(fromRev int64) ([]Event, error) {
     result := []Event{}
     for i := 0; i < l.count; i++ {
         idx := (l.startIndex + i) % l.capacity
@@ -47,4 +47,19 @@ func (l *MemoryEventLog) Replay(fromRev int64) ([]Event, error) {
 // LatestRevision returns the highest GlobalRev seen so far.
 func (l *MemoryEventLog) LatestRevision() int64 {
     return l.latestRev
+}
+
+// Compact removes all events with GlobalRev <= rev and returns the count of removed events.
+func (l *MemoryEventLog) Compact(rev int64) int {
+    removed := 0
+    for l.count > 0 {
+        ev := l.events[l.startIndex]
+        if ev.GlobalRev > rev {
+            break
+        }
+        l.startIndex = (l.startIndex + 1) % l.capacity
+        l.count--
+        removed++
+    }
+    return removed
 }
