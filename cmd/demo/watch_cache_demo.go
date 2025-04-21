@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/kaikaila/etcd-caching-gsoc/cache"
-	"github.com/kaikaila/etcd-caching-gsoc/watcher"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/proxy"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/watcher"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
@@ -21,7 +21,7 @@ func testWatcherWithWatchCache() {
 	}
 	defer cli.Close()
 
-	wc := cache.NewWatchCache(nil)
+	wc := proxy.NewWatchCache(nil)
 
 	watcher.WatchKeyWithRevision(cli, "/foo", wc.HandlePut, wc.HandleDelete)
 

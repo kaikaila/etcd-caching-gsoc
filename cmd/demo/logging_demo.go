@@ -3,30 +3,30 @@ package main
 import (
 	"fmt"
 
-	"github.com/kaikaila/etcd-caching-gsoc/cache"
-	"github.com/kaikaila/etcd-caching-gsoc/cache/event"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/eventlog"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/proxy"
 )
 
 func testWatcherWithLogOutput() {
 	fmt.Println("== Logging Demo ==")
 
 	// Create a memory-backed event log with capacity 5
-	log := event.NewMemoryEventLog(5)
-	cache := cache.NewWatchCacheWithLog(nil, log)
+	log := eventlog.NewMemoryEventLog(5)
+	cache := proxy.NewWatchCacheWithLog(nil, log)
 
 	// Add a few events
-	cache.AddEvent(event.Event{
+	cache.AddEvent(eventlog.Event{
 		Key:       "foo",
 		Value:     []byte("bar"),
 		GlobalRev: 100,
-		Type:      event.EventPut,
+		Type:      eventlog.EventPut,
 		ModRev:    100,
 	})
-	cache.AddEvent(event.Event{
+	cache.AddEvent(eventlog.Event{
 		Key:       "baz",
 		Value:     []byte("qux"),
 		GlobalRev: 101,
-		Type:      event.EventPut,
+		Type:      eventlog.EventPut,
 		ModRev:    101,
 	})
 

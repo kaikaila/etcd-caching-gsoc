@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/kaikaila/etcd-caching-gsoc/cache"
-	"github.com/kaikaila/etcd-caching-gsoc/watcher"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/proxy"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/watcher"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -17,7 +17,7 @@ func testWatcherWithMemoryCache() {
 	// Java: 相当于 public static void main(String[] args) {}
 	fmt.Println(">>> WatchWithMemoryCache started")
 	// 创建一个内存缓存实例
-    c := cache.NewMemoryCache()
+    c := proxy.NewMemoryCache()
 
 
 	// 创建一个 etcd 客户端连接（配置 IP、端口、超时时间）
@@ -36,7 +36,7 @@ func testWatcherWithMemoryCache() {
 	
 
 	// 启动 watcher，监听 /foo；用 goroutine 启动后台任务，类似 Java 的 new Thread(() -> ...)
-	sink := c.(cache.CacheWithSink)
+	sink := c.(proxy.CacheWithSink)
 	watcher.WatchKeySimple(cli, "/foo", sink.HandlePut, sink.HandleDelete)
 	
 	

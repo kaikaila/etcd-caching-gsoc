@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/kaikaila/etcd-caching-gsoc/watcher"
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/watcher"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
