@@ -1,4 +1,3 @@
-// eventlog_test.go
 package event_test
 
 import (
@@ -34,4 +33,12 @@ func TestEventLogInterface(t *testing.T) {
     events, _ = log.ListSince(0)
     assert.Len(t, events, 1)
     assert.Equal(t, "bar", events[0].Key)
+
+    // Future edge cases to consider:
+    // - Compact with threshold == 0: should retain all events
+    // - Compact with threshold >> all event revisions: should remove all events
+    // - Compact with threshold == highest GlobalRev: should remove all but latest
+    // - Compact when multiple events have the same GlobalRev:
+    //     Although GlobalRev is expected to be unique and monotonically increasing,
+    //     if duplicates occur (e.g. from replayed events or WAL bugs), all matching entries should be evicted.
 }
