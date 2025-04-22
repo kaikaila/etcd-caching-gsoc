@@ -7,9 +7,9 @@ package eventlog
 import "context"
 type EventLog interface {
     Append(ev Event) error                       // Appends an event to the log
-    ListSince(fromRev int64) ([]Event, error)    // Returns all events with GlobalRev > fromRev
+    ListSince(fromRev int64) ([]Event, error)    // Returns all events with Revision > fromRev
     Compact(rev int64) int 
-    LatestRevision() int64                       // Returns the current max GlobalRev in the log
-    // Watch returns a channel streaming events with GlobalRev > sinceRev.
+    LatestRevision() int64                       // Returns the current max Revision in the log
+    // Watch returns a channel streaming events with Revision > sinceRev.
     Watch(ctx context.Context, sinceRev int64) (<-chan Event, error)
 }

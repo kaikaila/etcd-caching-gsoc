@@ -1,11 +1,13 @@
 package proxy
 
+import "github.com/kaikaila/etcd-caching-gsoc/pkg/api"
 type WatchCacheInterface interface {
 	// this interface cannot be defined by building upon CacheWithSink, because the methods have different signatures(i.e. rev)
 	HandlePut(key, val string, rev int64)  
 	HandleDelete(key string, rev int64)
 	Get(key string) (string, bool)
 	Revision() int64
+	Snapshot() api.SnapshotView
 }
 
 // CacheWithSink represents a cache implementation that can also handle etcd watch events.

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/api"
 	"github.com/kaikaila/etcd-caching-gsoc/pkg/eventlog"
 	"github.com/stretchr/testify/assert"
 )
@@ -132,14 +133,14 @@ func TestAddEventListSince(t *testing.T) {
 		Key:       "foo",
 		Value:     []byte("bar"),
 		Revision: 100,
-		Type:      eventlog.EventPut,
+		Type:      api.EventPut,
 		ModRev:    100,
 	})
 	cache.AddEvent(eventlog.Event{
 		Key:       "baz",
 		Value:     []byte("qux"),
 		Revision: 101,
-		Type:      eventlog.EventPut,
+		Type:      api.EventPut,
 		ModRev:    101,
 	})
 

@@ -20,7 +20,7 @@ type session struct {
     cancelWatch     context.CancelFunc
 }
 
-func newSession(cache proxy.WatchCache, log eventlog.EventLog, rv int64) api.ClientSession {
+func newSession(cache proxy.WatchCacheInterface, log eventlog.EventLog, rv int64) api.ClientSession {
     // 1. 获取初始快照（Snapshot）
     snap := cache.Snapshot()
     // 2. 启动 watch

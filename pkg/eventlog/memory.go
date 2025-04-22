@@ -1,5 +1,10 @@
 package eventlog
 
+import (
+	"context"
+	"time"
+)
+
 // MemoryEventLog is the default in-memory implementation of EventLog.
 // It uses a slice as a ring buffer to store recent events.
 type MemoryEventLog struct {
@@ -62,4 +67,44 @@ func (l *MemoryEventLog) Compact(rev int64) int {
         removed++
     }
     return removed
+}
+
+// Watch returns a channel streaming events with Revision >= sinceRev.
+// It first emits historical events, then polls for new events periodically.
+func (l *MemoryEventLog) Watch(ctx context.Context, sinceRev int64) (<-chan Event, error) {
+    ch := make(chan Event)
+    go func() {
+        defer close(ch)
+        rev := sinceRev
+        // Emit historical events
+        evs, _ := l.ListSince(rev)
+        for _, ev := range evs {
+            select {
+            case <-ctx.Done():
+                return
+            case ch <- ev:
+                rev = ev.Revision
+            }
+        }
+        // Poll for new events
+        ticker := time.NewTicker(100 * time.Millisecond)
+        defer ticker.Stop()
+        for {
+            select {
+            case <-ctx.Done():
+                return
+            case <-ticker.C:
+                evs, _ := l.ListSince(rev + 1)
+                for _, ev := range evs {
+                    select {
+                    case <-ctx.Done():
+                        return
+                    case ch <- ev:
+                        rev = ev.Revision
+                    }
+                }
+            }
+        }
+    }()
+    return ch, nil
 }

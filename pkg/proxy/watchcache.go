@@ -3,9 +3,9 @@ package proxy
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"sync"
 
+	"github.com/kaikaila/etcd-caching-gsoc/pkg/api"
 	"github.com/kaikaila/etcd-caching-gsoc/pkg/eventlog"
 )
 
@@ -112,11 +112,11 @@ func (w *WatchCache) Get(key string) (*StoreObj, bool) {
 	return obj.DeepCopy(), true
 }
 
-func (w *WatchCache) AddEvent(ev eventlog.Event) error {
+func (w *WatchCache) AddEvent(ev api.Event) error {
 	switch ev.Type {
-	case eventlog.EventPut:
+	case api.EventPut:
 		w.HandlePutBytes(ev.Key, ev.Value, ev.Revision)
-	case eventlog.EventDelete:
+	case api.EventDelete:
 		w.HandleDeleteBytes(ev.Key, ev.Revision)
 	default:
 		return fmt.Errorf("unsupported event type: %v", ev.Type)
@@ -133,28 +133,16 @@ func (w *WatchCache) Revision() int64 {
 	return w.revision
 }
 
-// Snapshot returns a deep copy of the cache, in case external modification
-func (wc *WatchCache) Snapshot() map[string]*StoreObj {
+// Snapshot returns a SnapshotView over the current cache state.
+func (wc *WatchCache) Snapshot() api.SnapshotView {
 	wc.mu.RLock()
 	defer wc.mu.RUnlock()
 
-	snapshot := make(map[string]*StoreObj, len(wc.store))
-	for k, v := range wc.store {
-		snapshot[k] = v.DeepCopy()
+	// Build map for cacheView
+	m := make(map[string]*StoreObj, len(wc.store))
+	for key, obj := range wc.store {
+		m[key] = obj.DeepCopy()
 	}
-	return snapshot
-}
-
-// NewSnapshotView builds a view from the cache snapshot.
-func (wc *WatchCache) NewSnapshotView() *SnapshotView {
-	snap := wc.Snapshot()
-	items := make([]*StoreObj, 0, len(snap))
-	for _, obj := range snap {
-		items = append(items, obj)
-	}
-	// This is to sort by revision.  Optional for implementation: sort by keys
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Revision < items[j].Revision
-	})
-	return &SnapshotView{Data: items}
+	// Delegate to clientlibrary.NewCacheView for consistent view
+	return clientlibrary.cacheView{data:m, revision:wc.revision}
 }

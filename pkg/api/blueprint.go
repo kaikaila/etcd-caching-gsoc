@@ -120,6 +120,13 @@ type EtcdKV struct {
 // ======================================================
 //                       Shared Types
 // ======================================================
+// pkg/api/cacheview.go
+type SnapshotView interface {
+    Get(key string) (KV, bool)
+    List(prefix string) ([]KV, error)
+    Page(page, size int) ([]KV, error)
+    Revision() int64
+}
 
 type KV struct {
     Key      string

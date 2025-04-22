@@ -11,20 +11,17 @@ import (
 
 // ClientLibrary 实现 api.ClientLibrary
 type clientLibrary struct {
-    cache proxy.WatchCache
+    cache proxy.WatchCacheInterface
     log   eventlog.EventLog
 }
 
 // NewClientLibrary 构造
-func NewClientLibrary(cache proxy.WatchCache, log eventlog.EventLog) api.ClientLibrary {
+func NewClientLibrary(cache proxy.WatchCacheInterface, log eventlog.EventLog) api.ClientLibrary {
     return &clientLibrary{cache: cache, log: log}
 }
 
 // NewSession 创建一个新会话
 func (cl *clientLibrary) NewSession(clientID string) (api.ClientSession, error) {
-    if cl.cache == nil {
-        return nil, errors.New("cache is nil")
-    }
     if cl.log == nil {
         return nil, errors.New("event log is nil")
     }
@@ -34,7 +31,7 @@ func (cl *clientLibrary) NewSession(clientID string) (api.ClientSession, error) 
 }
 
 // BroadcastUpdate broadcasts an event into the EventLog.
-func (cl *clientLibrary) BroadcastUpdate(ev eventlog.Event) {
+func (cl *clientLibrary) BroadcastUpdate(ev api.Event) {
     // Append into the underlying EventLog.
     _ = cl.log.Append(ev)
 }

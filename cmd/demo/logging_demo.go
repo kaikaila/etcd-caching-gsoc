@@ -18,14 +18,14 @@ func testWatcherWithLogOutput() {
 	cache.AddEvent(eventlog.Event{
 		Key:       "foo",
 		Value:     []byte("bar"),
-		GlobalRev: 100,
+		Revision: 100,
 		Type:      eventlog.EventPut,
 		ModRev:    100,
 	})
 	cache.AddEvent(eventlog.Event{
 		Key:       "baz",
 		Value:     []byte("qux"),
-		GlobalRev: 101,
+		Revision: 101,
 		Type:      eventlog.EventPut,
 		ModRev:    101,
 	})
@@ -38,6 +38,6 @@ func testWatcherWithLogOutput() {
 		return
 	}
 	for _, ev := range events {
-		fmt.Printf("Key=%s Type=%v GlobalRev=%d Value=%s\n", ev.Key, ev.Type, ev.GlobalRev, string(ev.Value))
+		fmt.Printf("Key=%s Type=%v Revision=%d Value=%s\n", ev.Key, ev.Type, ev.Revision, string(ev.Value))
 	}
 }

@@ -10,9 +10,9 @@ func TestEventLogInterface(t *testing.T) {
     log := NewMemoryEventLog(5)  // change this to apply the test to other eventlog implementations
 
     // Append events
-    err := log.Append(Event{Key: "foo", Value: []byte("v1"), GlobalRev: 100})
+    err := log.Append(Event{Key: "foo", Value: []byte("v1"), Revision: 100})
     assert.NoError(t, err)
-    err = log.Append(Event{Key: "bar", Value: []byte("v2"), GlobalRev: 101})
+    err = log.Append(Event{Key: "bar", Value: []byte("v2"), Revision: 101})
     assert.NoError(t, err)
 
     // Test ListSince
@@ -36,8 +36,8 @@ func TestEventLogInterface(t *testing.T) {
     // Future edge cases to consider:
     // - Compact with threshold == 0: should retain all events
     // - Compact with threshold >> all event revisions: should remove all events
-    // - Compact with threshold == highest GlobalRev: should remove all but latest
-    // - Compact when multiple events have the same GlobalRev:
-    //     Although GlobalRev is expected to be unique and monotonically increasing,
+    // - Compact with threshold == highest Revision: should remove all but latest
+    // - Compact when multiple events have the same Revision:
+    //     Although Revision is expected to be unique and monotonically increasing,
     //     if duplicates occur (e.g. from replayed events or WAL bugs), all matching entries should be evicted.
 }

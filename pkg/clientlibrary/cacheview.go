@@ -17,12 +17,12 @@ type cacheView struct {
 }
 
 // NewCacheView creates a new cache view from the given snapshot map.
-// It deep-copies each object and sorts them by GlobalRev for deterministic ordering.
+// It deep-copies each object and sorts them by Revision for deterministic ordering.
 func NewCacheView(snapshot map[string]*proxy.StoreObj) *cacheView {
 	var maxRev int64
 	for _, o := range snapshot {
-		if o.GlobalRev > maxRev {
-			maxRev = o.GlobalRev
+		if o.Revision > maxRev {
+			maxRev = o.Revision
 		}
 	}
 	objs := make([]*proxy.StoreObj, 0, len(snapshot))
@@ -30,7 +30,7 @@ func NewCacheView(snapshot map[string]*proxy.StoreObj) *cacheView {
 		objs = append(objs, o.DeepCopy())
 	}
 	sort.Slice(objs, func(i, j int) bool {
-		return objs[i].GlobalRev < objs[j].GlobalRev
+		return objs[i].Revision < objs[j].Revision
 	})
 	return &cacheView{data: objs, revision: maxRev}
 }
@@ -39,7 +39,7 @@ func NewCacheView(snapshot map[string]*proxy.StoreObj) *cacheView {
 func (cv *cacheView) Get(key string) (api.KV, bool) {
 	for _, o := range cv.data {
 		if o.Key == key {
-			return api.KV{Key: o.Key, Value: o.Value, Revision: o.GlobalRev}, true
+			return api.KV{Key: o.Key, Value: o.Value, Revision: o.Revision}, true
 		}
 	}
 	return api.KV{}, false
@@ -50,7 +50,7 @@ func (cv *cacheView) List(prefix string) ([]api.KV, error) {
 	result := make([]api.KV, 0)
 	for _, o := range cv.data {
 		if strings.HasPrefix(o.Key, prefix) {
-			result = append(result, api.KV{Key: o.Key, Value: o.Value, Revision: o.GlobalRev})
+			result = append(result, api.KV{Key: o.Key, Value: o.Value, Revision: o.Revision})
 		}
 	}
 	return result, nil
@@ -61,7 +61,7 @@ func (cv *cacheView) Watch(key string, fromRevision int64) (<-chan api.Event, er
 	return nil, fmt.Errorf("Watch not supported in cache view")
 }
 
-// ResourceVersion returns the highest GlobalRev in the snapshot.
+// ResourceVersion returns the highest Revision in the snapshot.
 func (cv *cacheView) ResourceVersion() int64 {
 	return cv.revision
 }
