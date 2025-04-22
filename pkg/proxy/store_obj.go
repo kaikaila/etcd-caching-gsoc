@@ -8,7 +8,7 @@ type StoreObj struct {
     Value          []byte
     Revision      int64 // global revision: indicates the change's order among all operations
     ModRev         int64
-    EventType      mvccpb.Event_EventType
+    EventType      mvccpb.Event_EventType  // necessary attribute?
 }
 
 // DeepCopy creates a new copy of StoreObj to avoid shared memory.

@@ -22,7 +22,7 @@ func TestSnapshotIsolation(t *testing.T) {
 	wc.HandlePut("foo", "baz", 2)
 
 	// Verify the snapshot remains unchanged
-	obj, ok := snap1["foo"]
+	obj, ok := snap1.index["foo"]
 	if !ok {
 		t.Fatalf("snapshot missing key 'foo'")
 	}
@@ -75,21 +75,21 @@ func TestNewSnapshotViewPaging(t *testing.T) {
     wc.HandlePut("c", "valC", 2)
 
     // Build a snapshot view
-    sv := wc.NewSnapshotView()
+    sv := wc.Snapshot()
 
-    // Verify Data length and sorting by Revision ascending
-    if len(sv.Data) != 3 {
-        t.Fatalf("expected 3 items in SnapshotView, got %d", len(sv.Data))
+    // Verify data length and sorting by Revision ascending
+    if len(sv.data) != 3 {
+        t.Fatalf("expected 3 items in SnapshotView, got %d", len(sv.data))
     }
     expectedGlobals := []int64{1, 2, 3}
-    for i, obj := range sv.Data {
+    for i, obj := range sv.data {
         if obj.Revision != expectedGlobals[i] {
             t.Fatalf("at index %d expected Revision %d, got %d", i, expectedGlobals[i], obj.Revision)
         }
     }
 
     // Test paging: page size 2
-    page1 := sv.Page(1, 2)
+    page1,_ := sv.Page(1, 2)
     if len(page1) != 2 {
         t.Fatalf("expected 2 items on page 1, got %d", len(page1))
     }
@@ -97,7 +97,7 @@ func TestNewSnapshotViewPaging(t *testing.T) {
         t.Fatalf("page1 Revisions mismatch: got [%d, %d]", page1[0].Revision, page1[1].Revision)
     }
 
-    page2 := sv.Page(2, 2)
+    page2,_ := sv.Page(2, 2)
     if len(page2) != 1 {
         t.Fatalf("expected 1 item on page 2, got %d", len(page2))
     }
@@ -106,7 +106,7 @@ func TestNewSnapshotViewPaging(t *testing.T) {
     }
 
     // Out-of-range page should return empty slice
-    page3 := sv.Page(3, 2)
+    page3,_ := sv.Page(3, 2)
     if len(page3) != 0 {
         t.Fatalf("expected 0 items on page 3, got %d", len(page3))
     }

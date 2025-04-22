@@ -3,6 +3,7 @@ package proxy
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/kaikaila/etcd-caching-gsoc/pkg/api"
@@ -134,15 +135,23 @@ func (w *WatchCache) Revision() int64 {
 }
 
 // Snapshot returns a SnapshotView over the current cache state.
-func (wc *WatchCache) Snapshot() api.SnapshotView {
-	wc.mu.RLock()
-	defer wc.mu.RUnlock()
+func (wc *WatchCache) Snapshot() *CacheSnapshotView {
+    wc.mu.RLock()
+    defer wc.mu.RUnlock()
 
-	// Build map for cacheView
-	m := make(map[string]*StoreObj, len(wc.store))
-	for key, obj := range wc.store {
-		m[key] = obj.DeepCopy()
-	}
-	// Delegate to clientlibrary.NewCacheView for consistent view
-	return &CacheSnapshotView{Data:m, Revision:wc.revision}
+    // 1. 收集所有深拷贝的 StoreObj
+    items := make([]*StoreObj, 0, len(wc.store))
+    for _, obj := range wc.store {
+        items = append(items, obj.DeepCopy())
+    }
+    // 2. 按 Revision 排序，保证顺序稳定
+    sort.Slice(items, func(i, j int) bool {
+        return items[i].Revision < items[j].Revision
+    })
+    // 3. 返回包含数据和当前全局版本号的视图
+    return &CacheSnapshotView{
+        data: items,
+		index: wc.store,
+        revision:  wc.revision,
+    }
 }
