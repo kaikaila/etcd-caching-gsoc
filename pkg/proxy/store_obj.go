@@ -7,7 +7,7 @@ type StoreObj struct {
     Key            string
     Value          []byte
     KeyRev         int64 // per-key revision: incremented only when this key changes
-    GlobalRev      int64 // global revision: indicates the change's order among all operations
+    Revision      int64 // global revision: indicates the change's order among all operations
     ModRev         int64
     EventType      mvccpb.Event_EventType
 }

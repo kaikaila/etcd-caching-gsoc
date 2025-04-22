@@ -101,7 +101,7 @@ func TestWatchCache_AddEvent_Put(t *testing.T) {
 	ev := eventlog.Event{
 		Key:        "alpha",
 		Value:      []byte("value1"),
-		GlobalRev:  100,
+		Revision:  100,
 		Type:       eventlog.EventPut,
 		ModRev:     100,
 	}
@@ -131,14 +131,14 @@ func TestAddEventListSince(t *testing.T) {
 	cache.AddEvent(eventlog.Event{
 		Key:       "foo",
 		Value:     []byte("bar"),
-		GlobalRev: 100,
+		Revision: 100,
 		Type:      eventlog.EventPut,
 		ModRev:    100,
 	})
 	cache.AddEvent(eventlog.Event{
 		Key:       "baz",
 		Value:     []byte("qux"),
-		GlobalRev: 101,
+		Revision: 101,
 		Type:      eventlog.EventPut,
 		ModRev:    101,
 	})

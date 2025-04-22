@@ -77,14 +77,14 @@ func TestNewSnapshotViewPaging(t *testing.T) {
     // Build a snapshot view
     sv := wc.NewSnapshotView()
 
-    // Verify Data length and sorting by GlobalRev ascending
+    // Verify Data length and sorting by Revision ascending
     if len(sv.Data) != 3 {
         t.Fatalf("expected 3 items in SnapshotView, got %d", len(sv.Data))
     }
     expectedGlobals := []int64{1, 2, 3}
     for i, obj := range sv.Data {
-        if obj.GlobalRev != expectedGlobals[i] {
-            t.Fatalf("at index %d expected GlobalRev %d, got %d", i, expectedGlobals[i], obj.GlobalRev)
+        if obj.Revision != expectedGlobals[i] {
+            t.Fatalf("at index %d expected Revision %d, got %d", i, expectedGlobals[i], obj.Revision)
         }
     }
 
@@ -93,16 +93,16 @@ func TestNewSnapshotViewPaging(t *testing.T) {
     if len(page1) != 2 {
         t.Fatalf("expected 2 items on page 1, got %d", len(page1))
     }
-    if page1[0].GlobalRev != 1 || page1[1].GlobalRev != 2 {
-        t.Fatalf("page1 GlobalRevs mismatch: got [%d, %d]", page1[0].GlobalRev, page1[1].GlobalRev)
+    if page1[0].Revision != 1 || page1[1].Revision != 2 {
+        t.Fatalf("page1 Revisions mismatch: got [%d, %d]", page1[0].Revision, page1[1].Revision)
     }
 
     page2 := sv.Page(2, 2)
     if len(page2) != 1 {
         t.Fatalf("expected 1 item on page 2, got %d", len(page2))
     }
-    if page2[0].GlobalRev != 3 {
-        t.Fatalf("page2 GlobalRev mismatch: expected 3, got %d", page2[0].GlobalRev)
+    if page2[0].Revision != 3 {
+        t.Fatalf("page2 Revision mismatch: expected 3, got %d", page2[0].Revision)
     }
 
     // Out-of-range page should return empty slice

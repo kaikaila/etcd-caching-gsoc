@@ -20,7 +20,7 @@ func NewMemoryEventLog(capacity int) *MemoryEventLog {
 
 // Append adds a new event to the log, maintaining a fixed-size ring buffer.
 func (l *MemoryEventLog) Append(ev Event) error {
-    l.latestRev = ev.GlobalRev
+    l.latestRev = ev.Revision
     pos := (l.startIndex + l.count) % l.capacity
     l.events[pos] = ev
     if l.count < l.capacity {
@@ -31,30 +31,30 @@ func (l *MemoryEventLog) Append(ev Event) error {
     return nil
 }
 
-// ListSince returns all events with GlobalRev >= fromRev.
+// ListSince returns all events with Revision >= fromRev.
 func (l *MemoryEventLog) ListSince(fromRev int64) ([]Event, error) {
     result := []Event{}
     for i := 0; i < l.count; i++ {
         idx := (l.startIndex + i) % l.capacity
         ev := l.events[idx]
-        if ev.GlobalRev >= fromRev {
+        if ev.Revision >= fromRev {
             result = append(result, ev)
         }
     }
     return result, nil
 }
 
-// LatestRevision returns the highest GlobalRev seen so far.
+// LatestRevision returns the highest Revision seen so far.
 func (l *MemoryEventLog) LatestRevision() int64 {
     return l.latestRev
 }
 
-// Compact removes all events with GlobalRev <= rev and returns the count of removed events.
+// Compact removes all events with Revision <= rev and returns the count of removed events.
 func (l *MemoryEventLog) Compact(rev int64) int {
     removed := 0
     for l.count > 0 {
         ev := l.events[l.startIndex]
-        if ev.GlobalRev > rev {
+        if ev.Revision > rev {
             break
         }
         l.startIndex = (l.startIndex + 1) % l.capacity

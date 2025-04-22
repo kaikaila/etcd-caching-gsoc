@@ -11,8 +11,8 @@ func NewStoreObjFromEvent(ev eventlog.Event) *StoreObj {
     return &StoreObj{
         Key:            ev.Key,
         Value:          ev.Value,
-        GlobalRev:      ev.GlobalRev,
-        ModRev:         ev.GlobalRev, // or ev.ModRev if future events carry it separately
+        Revision:      ev.Revision,
+        ModRev:         ev.Revision, // or ev.ModRev if future events carry it separately
         EventType:      mvccpb.Event_EventType(ev.Type), // convert to etcd's enum type
     }
 }

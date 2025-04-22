@@ -43,29 +43,29 @@ func NewWatchCacheWithLog(sink EventSink, log eventlog.EventLog) *WatchCache {
 
 // HandlePut is a convenience wrapper that accepts string values.
 // For performance-sensitive scenarios, use HandlePutBytes instead.
-func (w *WatchCache) HandlePut(key, val string, globalRev int64) {
-	w.HandlePutBytes(key, []byte(val), globalRev)
+func (w *WatchCache) HandlePut(key, val string, Revision int64) {
+	w.HandlePutBytes(key, []byte(val), Revision)
 }
 
 // HandlePutBytes is the high-throughput version of HandlePut that accepts raw byte slices.
 // It avoids extra string<->[]byte conversions for high-frequency workloads.
-func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, globalRev int64) {
+func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, Revision int64) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	existing, ok := w.store[key]
-	if ok && globalRev <= existing.GlobalRev {
+	if ok && Revision <= existing.Revision {
 		return
 	}
 
 	w.store[key] = &StoreObj{
 		Key:      key,
 		Value:    valBytes,
-		GlobalRev: globalRev,
+		Revision: Revision,
 	}
 
-	if globalRev > w.revision {
-		w.revision = globalRev
+	if Revision > w.revision {
+		w.revision = Revision
 	}
 
 	if w.eventSink != nil {
@@ -75,19 +75,19 @@ func (w *WatchCache) HandlePutBytes(key string, valBytes []byte, globalRev int64
 
 // HandleDeleteBytes is the high-throughput version of HandleDelete that accepts raw data.
 // It avoids extra overhead in delete operations.
-func (w *WatchCache) HandleDeleteBytes(key string, globalRev int64) {
+func (w *WatchCache) HandleDeleteBytes(key string, Revision int64) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	existing, ok := w.store[key]
-	if ok && globalRev <= existing.GlobalRev {
+	if ok && Revision <= existing.Revision {
 		return
 	}
 
 	delete(w.store, key)
 
-	if globalRev > w.revision {
-		w.revision = globalRev
+	if Revision > w.revision {
+		w.revision = Revision
 	}
 	if w.eventSink != nil {
 		w.eventSink.HandleDelete(key)
@@ -96,8 +96,8 @@ func (w *WatchCache) HandleDeleteBytes(key string, globalRev int64) {
 
 // HandleDelete is a convenience wrapper for deletion.
 // For performance-sensitive scenarios, use HandleDeleteBytes instead.
-func (w *WatchCache) HandleDelete(key string, globalRev int64) {
-	w.HandleDeleteBytes(key, globalRev)
+func (w *WatchCache) HandleDelete(key string, Revision int64) {
+	w.HandleDeleteBytes(key, Revision)
 }
 
 // Get returns a deep copy of the StoreObj associated with the key
@@ -115,9 +115,9 @@ func (w *WatchCache) Get(key string) (*StoreObj, bool) {
 func (w *WatchCache) AddEvent(ev eventlog.Event) error {
 	switch ev.Type {
 	case eventlog.EventPut:
-		w.HandlePutBytes(ev.Key, ev.Value, ev.GlobalRev)
+		w.HandlePutBytes(ev.Key, ev.Value, ev.Revision)
 	case eventlog.EventDelete:
-		w.HandleDeleteBytes(ev.Key, ev.GlobalRev)
+		w.HandleDeleteBytes(ev.Key, ev.Revision)
 	default:
 		return fmt.Errorf("unsupported event type: %v", ev.Type)
 	}
@@ -154,7 +154,7 @@ func (wc *WatchCache) NewSnapshotView() *SnapshotView {
 	}
 	// This is to sort by revision.  Optional for implementation: sort by keys
 	sort.Slice(items, func(i, j int) bool {
-		return items[i].GlobalRev < items[j].GlobalRev
+		return items[i].Revision < items[j].Revision
 	})
 	return &SnapshotView{Data: items}
 }
