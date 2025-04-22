@@ -144,5 +144,5 @@ func (wc *WatchCache) Snapshot() api.SnapshotView {
 		m[key] = obj.DeepCopy()
 	}
 	// Delegate to clientlibrary.NewCacheView for consistent view
-	return clientlibrary.cacheView{data:m, revision:wc.revision}
+	return &CacheSnapshotView{Data:m, Revision:wc.revision}
 }

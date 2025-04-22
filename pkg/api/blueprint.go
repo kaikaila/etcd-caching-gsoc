@@ -74,8 +74,7 @@ type MetricsExporter interface {
 type ClientCacheView interface {
     Get(key string) (KV, bool)
     List(prefix string) ([]KV, error)
-    Watch(key string, fromRevision int64) (<-chan Event, error)
-    ResourceVersion() int64
+    Revision() int64
 }
 
 // ClientSession manages the lifecycle of one connected client.

@@ -6,7 +6,6 @@ import "go.etcd.io/etcd/api/v3/mvccpb"
 type StoreObj struct {
     Key            string
     Value          []byte
-    KeyRev         int64 // per-key revision: incremented only when this key changes
     Revision      int64 // global revision: indicates the change's order among all operations
     ModRev         int64
     EventType      mvccpb.Event_EventType

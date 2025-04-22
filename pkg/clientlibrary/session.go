@@ -68,7 +68,7 @@ func (s *session) ID() string {
     return fmt.Sprintf("%p", s)
 }
 
-// CacheView returns a read-only view of the initial snapshot.
-func (s *session) CacheView() api.ClientCacheView {
-    return NewCacheView(s.initialSnapshot)
+// CacheView returns a read-only snapshot view of the cache.
+func (s *session) CacheView() api.SnapshotView {
+    return s.cache.Snapshot()
 }
