@@ -70,19 +70,19 @@ type MetricsExporter interface {
 //                 COMPONENT: CLIENT LIBRARY
 // ======================================================
 
-// ClientCacheView provides a per-client view of the cache.
-type ClientCacheView interface {
-    Get(key string) (KV, bool)
-    List(prefix string) ([]KV, error)
-    Revision() int64
-}
-
 // ClientSession manages the lifecycle of one connected client.
 type ClientSession interface {
-    Start() error
-    Stop() error
-    ID() string
-    CacheView() ClientCacheView
+    // --- Lifecycle management ---
+    Start() error     // Starts session: init resources, register, etc.
+    Stop() error      // Terminates session, releases any goroutine or channel
+    ID() string       // Returns session ID for tracking
+
+    // --- View and watch capabilities ---
+    CacheView() SnapshotView
+    // WatchSingle subscribes to changes on a single key
+    Watch(key string, fromRev int64) (<-chan Event, error)
+    // WatchPrefix subscribes to changes on a key prefix
+    WatchPrefix(prefix string, fromRev int64) (<-chan Event, error)
 }
 
 // ClientLibrary provides an interface for SDK-level usage.
@@ -151,4 +151,3 @@ type Event struct {
     Revision int64     // Monotonic revision assigned by the watch cache, used for local event ordering
     ModRev    int64     // etcd's original ModRevision for this key
 }
-

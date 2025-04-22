@@ -135,7 +135,7 @@ func (w *WatchCache) Revision() int64 {
 }
 
 // Snapshot returns a SnapshotView over the current cache state.
-func (wc *WatchCache) Snapshot() *CacheSnapshotView {
+func (wc *WatchCache) Snapshot() api.SnapshotView {
     wc.mu.RLock()
     defer wc.mu.RUnlock()
 

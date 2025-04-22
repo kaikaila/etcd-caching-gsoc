@@ -1,9 +1,11 @@
-// pkg/clientlibrary/session.go
+// session 实现 api.ClientSession。
+// 提供 snapshot 读取、事件订阅流以及生命周期管理（Start/Stop）。
 package clientlibrary
 
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/kaikaila/etcd-caching-gsoc/pkg/api"
 	"github.com/kaikaila/etcd-caching-gsoc/pkg/eventlog"
@@ -12,17 +14,18 @@ import (
 
 // session 实现 api.ClientSession
 type session struct {
-    cache           proxy.WatchCache
+    cache           proxy.WatchCacheInterface
     log             eventlog.EventLog
     startRevision   int64
-    initialSnapshot map[string]*proxy.StoreObj
+    initialSnapshot []api.KV
     eventsCh        <-chan eventlog.Event
     cancelWatch     context.CancelFunc
 }
 
 func newSession(cache proxy.WatchCacheInterface, log eventlog.EventLog, rv int64) api.ClientSession {
     // 1. 获取初始快照（Snapshot）
-    snap := cache.Snapshot()
+    snaps := cache.Snapshot()
+    ssdata,_ := snaps.List("")
     // 2. 启动 watch
     ctx, cancel := context.WithCancel(context.Background())
     events, _ := log.Watch(ctx, rv+1)
@@ -30,20 +33,54 @@ func newSession(cache proxy.WatchCacheInterface, log eventlog.EventLog, rv int64
         cache:           cache,
         log:             log,
         startRevision:   rv,
-        initialSnapshot: snap,
+        initialSnapshot: ssdata,
         eventsCh:        events,
         cancelWatch:     cancel,
     }
 }
 
 // List 返回 snapshot
-func (s *session) List() map[string]*proxy.StoreObj {
+func (s *session) List() []api.KV {
     return s.initialSnapshot
 }
 
-// Watch 返回一个事件 channel
-func (s *session) Watch() <-chan eventlog.Event {
-    return s.eventsCh
+// WatchSingle subscribes to changes on a single key
+func (s *session) Watch(key string, fromRev int64) (<-chan api.Event, error) {
+	ctx, _ := context.WithCancel(context.Background())
+	events, err := s.log.Watch(ctx, fromRev)
+	if err != nil {
+		return nil, err
+	}
+	out := make(chan api.Event)
+	go func() {
+		defer close(out)
+		for ev := range events {
+			if ev.Key == key {
+				out <- ev
+			}
+		}
+	}()
+	// 暂不追踪 substream cancel，可加字段做管理
+	return out, nil
+}
+
+// WatchPrefix subscribes to changes on a key prefix
+func (s *session) WatchPrefix(prefix string, fromRev int64) (<-chan api.Event, error) {
+	ctx, _ := context.WithCancel(context.Background())
+	events, err := s.log.Watch(ctx, fromRev)
+	if err != nil {
+		return nil, err
+	}
+	out := make(chan api.Event)
+	go func() {
+		defer close(out)
+		for ev := range events {
+			if strings.HasPrefix(ev.Key, prefix) {
+				out <- ev
+			}
+		}
+	}()
+	return out, nil
 }
 
 // Close 取消 watch

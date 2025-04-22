@@ -5,7 +5,7 @@ type WatchCacheInterface interface {
 	// this interface cannot be defined by building upon CacheWithSink, because the methods have different signatures(i.e. rev)
 	HandlePut(key, val string, rev int64)  
 	HandleDelete(key string, rev int64)
-	Get(key string) (string, bool)
+	Get(key string) (*StoreObj, bool)
 	Revision() int64
 	Snapshot() api.SnapshotView
 }

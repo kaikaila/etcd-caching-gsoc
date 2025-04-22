@@ -43,16 +43,16 @@ func TestClientSession_MVP(t *testing.T) {
     defer sess.Stop()
     view := sess.CacheView()
     // 2. 初始 snapshot 应该看到 rev<=1 的内容
-    snap := sess.List()
-    if _, ok := snap["key1"]; !ok {
+    
+    if _, ok := view.Get("key1"); !ok {
         t.Errorf("expected key1 in snapshot")
     }
-    if _, ok := snap["key2"]; ok {  // key2 rev=2 不应出现在 snapshot
+    if _, ok := view.Get("key2"); ok {  // key2 rev=2 不应出现在 snapshot
         t.Errorf("did not expect key2 in snapshot")
     }
 
     // 3. Watch 应该能收到 rev>1 的事件
-    events := view.Watch()
+    events,_ := sess.Watch("key1",1)
     ev := <-events
     if ev.Key != "key2" {
         t.Errorf("expected key2 event, got %v", ev)
