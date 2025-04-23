@@ -104,6 +104,8 @@ MIMS @ UC Berkeley
 GitHub: @kaikaila
 Email: yunkai_li@berkeley.edu
 
+Note: Commits prior to public release were made in a private repository context and may lack `--signoff`. All future contributions will follow the DCO signing standard.
+
 ```
 
 ```
