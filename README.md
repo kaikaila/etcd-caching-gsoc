@@ -72,6 +72,23 @@ cd cmd/proxy && go run main.go
 
 ⸻
 
+## 🔍 Downstream Use Survey (Preliminary Thoughts)
+
+While developing this prototype, I also began designing a downstream user survey — intended to help prioritize cache behaviors based on real-world needs from projects like Istio, Calico, and Cilium.
+
+To be clear:
+
+- This survey has **not been officially published** (pending GSoC selection outcome).
+- It is only intended as an **early prototype of a design validation tool**.
+- I welcome any feedback from community members on whether such an effort would be valuable or redundant.
+
+📄 [Preview of Survey Form](https://docs.google.com/forms/d/e/1FAIpQLSfwlpMmI-Wjm08O5tw_MJFfKYq1o7DKBXXcOxtxlTmlf-c68g/viewform?usp=sharing)  
+📊 [Preliminary Dashboard (fake data)](https://docs.google.com/document/d/1W8V0wBtyWBifgspzcviE17EAFLlzCjZAFBHSLx7KOcY/edit?usp=sharing)
+
+This idea was inspired by the realization that not all downstream projects have the same consistency vs latency tradeoffs, and that making cache behavior configurable might depend on validating actual use cases.
+
+---
+
 🤝 Feedback & Collaboration
 
 This project is intended to serve the broader etcd ecosystem, and is being actively refined based on community needs. If you’re from a project like Istio, Cilium, Calico, or others and have opinions about cache behavior, List-watch usage, or restart consistency, feedback is very welcome.
