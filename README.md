@@ -1,6 +1,6 @@
 # etcd-watchcache-prototype
 
-This repository contains a prototype implementation for the [GSoC 2025 proposal](./Proposal-Develop%20a%20caching%20library%20for%20etcd%20-%20YunkaiLi.md) titled **"Develop a Caching Library for etcd"**, focused on building a generic WatchCache proxy that can serve multiple downstream consumers such as Istio, Calico, and Cilium.
+This repository contains a prototype implementation for the [GSoC 2025 proposal](https://github.com/kaikaila/etcd-caching-gsoc/tree/main/docs/Proposal-Develop%20a%20caching%20library for%20etcd%20-%20YunkaiLi.pdf) titled **"Develop a Caching Library for etcd"**, focused on building a generic WatchCache proxy that can serve multiple downstream consumers such as Istio, Calico, and Cilium.
 
 > ⚠️ **Note:** This is a mid-stage prototype. While the core components (e.g., `WatchCache`, `Snapshot`, `Compact`, `ClientSession`) have been designed and partially implemented, the interface boundaries and client-side abstractions are actively being refactored. Expect bugs and partial implementations.
 
@@ -21,17 +21,21 @@ This repository contains a prototype implementation for the [GSoC 2025 proposal]
 
 ```plaintext
 .
-├── Proposal-Develop a caching library for etcd - YunkaiLi.md  # Full GSoC proposal (for context)
 ├── README.md                                                  # You're here
 ├── cmd/                                                       # Entry points and CLI demos
 │   ├── demo/                                                  # Minimal usage demos (WIP)
 │   └── proxy/                                                 # Main proxy startup logic
 ├── default.etcd/                                              # Local etcd volume mount
-├── docs/                                                      # Architecture, roadmap, and design docs
+├── docs/                                                      # Architecture, roadmap, proposal, design docs
+│   ├── Proposal-Develop a caching library for etcd - YunkaiLi.md   # Full GSoC proposal (markdown)
+│   ├── Proposal-Develop a caching library for etcd - YunkaiLi.pdf  # Same proposal (PDF version)
 │   ├── roadmap.md                                             # GSoC milestones and deliverables
 │   ├── performance_decision.md                                # Trade-offs and performance notes
-│   ├── *.xmind                                                # Architecture and file structure mindmaps
-│   └── clientli.md                                            # Client-side session design
+│   ├── clientli.md                                            # Client-side session design
+│   ├── architecture.xmind                                     # High-level WatchCache architecture
+│   ├── ClientLibrary Architecture.xmind                       # ClientSession internal structure
+│   ├── file_structure_xmind.md                                # Codebase structure planning
+│   └── watchcache_xmind.md                                    # Event flow / WatchCache logic
 ├── go.mod / go.sum                                            # Go module definition
 ├── pkg/                                                       # Core modules (under active development)
 │   ├── adapter/                                               # Optional protocol-specific adapters
@@ -42,8 +46,7 @@ This repository contains a prototype implementation for the [GSoC 2025 proposal]
 │   └── watcher/                                               # etcd Watcher and restart logic
 ├── run_etcd_docker.sh                                         # Dev script to launch etcd in Docker
 └── stop_etcd_docker.sh                                        # Cleanup script
-
-
+```
 
 ⸻
 
@@ -52,20 +55,20 @@ This repository contains a prototype implementation for the [GSoC 2025 proposal]
 ⚠️ Development is still ongoing, so components may not be fully wired.
 
 # Step 1: Launch local etcd (Docker)
+
 ./run_etcd_docker.sh
 
 # Step 2: Run a minimal proxy or demo (under cmd/)
+
 cd cmd/proxy && go run main.go
-
-
 
 ⸻
 
 📚 Docs & Design Notes
-	•	📄 GSoC Proposal (PDF-style)
-	•	🧠 Architecture Diagrams
-	•	🧱 Client Library Planning
-	•	🧭 Roadmap
+• 📄 GSoC Proposal (PDF-style)
+• 🧠 Architecture Diagrams
+• 🧱 Client Library Planning
+• 🧭 Roadmap
 
 ⸻
 
@@ -83,4 +86,7 @@ Yunkai Li
 MIMS @ UC Berkeley
 GitHub: @kaikaila
 Email: yunkai_li@berkeley.edu
+
+```
+
 ```
